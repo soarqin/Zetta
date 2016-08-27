@@ -1,0 +1,89 @@
+{
+    "ClassName": "DISGAEA",
+    "Versions": {
+        "1.0.0.3": {
+            "MemAddr": "0x214000",
+            "Offset": {
+                "+基本": [
+                    {"name": "HL",             "type": "u64", "block": "mem", "offset": "0x1570"},
+                    {"name": "BonusGauge进度", "type": "u16", "block": "mem", "offset": "0x45B24"},
+                    {"name": "BonusGauge等级", "type": "u8",  "block": "mem", "offset": "0x45B26"}
+                ],
+                "魔界医院": [
+                    {"name": "SP恢复",         "type": "u64", "block": "mem", "offset": "0x1590"},
+                    {"name": "HP恢复",         "type": "u64", "block": "mem", "offset": "0x1588"},
+                    {"name": "复活",           "type": "u32", "block": "mem", "offset": "0x45B00"}
+                ],
+                "商店": [
+                    {"name": "HL消费",         "type": "u64", "block": "mem", "offset": "0x1578"},
+                    {"name": "顾客等级",       "type": "u8",  "block": "mem", "offset": "0x45B3B"},
+                    {"name": "商品等级",       "type": "u8",  "block": "mem", "offset": "0x45B3C"}
+                ],
+                "+记录": [
+                    {"name": "小时",           "type": "u16", "block": "mem", "offset": "0x12E8"},
+                    {"name": "分钟",           "type": "u8",  "block": "mem", "offset": "0x12EA"},
+                    {"name": "秒",             "type": "u8",  "block": "mem", "offset": "0x12EB"},
+                    {"name": "通关次数",       "type": "u16", "block": "mem", "offset": "0x1316"},
+                    {"name": "最大伤害",       "type": "u32", "block": "mem", "offset": "0x460E0"},
+                    {"name": "总体伤害",       "type": "u32", "block": "mem", "offset": "0x460E4"},
+                    {"name": "地形连锁",       "type": "u32", "block": "mem", "offset": "0x460E8"},
+                    {"name": "伙伴击杀",       "type": "u32", "block": "mem", "offset": "0x460F0"},
+                    {"name": "敌人击杀",       "type": "u32", "block": "mem", "offset": "0x460F4"},
+                    {"name": "最大等级",       "type": "u32", "block": "mem", "offset": "0x460FC"},
+                    {"name": "转生次数",       "type": "u32", "block": "mem", "offset": "0x46100"},
+                    {"name": "人物制作率",     "type": "u32", "block": "mem", "offset": "0x46110"},
+                    {"name": "物品收集率",     "type": "u32", "block": "mem", "offset": "0x46104"},
+                    {"name": "道具界次数",     "type": "u32", "block": "mem", "offset": "0x46108"},
+                    {"name": "道具界层数",     "type": "u32", "block": "mem", "offset": "0x4610C"}
+                ],
+                "+功能": [
+                    {"name": "快速升级",       "type": "blk", "block": "prog", "offset": [{"search": "01 01 11 51 04 E9 45 FF FF FF", "skip": 5, "patch": "0C 01 D1 C8 01 01 11 51 04"}]},
+                    {"name": "无限移动",       "type": "blk", "block": "prog", "offset": [{"search": "88 86 02 04 00 00 EB 0A", "skip": 6, "patch": "B0 00 88 86 02 04 00 00"}, {"search": "C6 87 03 04 00 00 01 0F BF 87 EE 03 00 00 C1 E0 05 0F", "skip": 7, "patch": "C6 87 03 04 00 00 00"}]},
+                    {"name": "快速BonusGauge", "type": "blk", "block": "prog", "offset": [{"search": "66 A3 24 X0 X1 X2 66 83 F8 64", "skip": 6, "patch": "66 B8 64 00 66 A3 24 X0 X1 X2"}]}
+                ]
+            }
+        },
+        "1.0.0.5": {
+            "MemAddr": "0x218000",
+            "Offset": {
+                "+基本": [
+                    {"name": "HL",             "type": "u64", "block": "mem", "offset": "0x1570"},
+                    {"name": "BonusGauge进度", "type": "u16", "block": "mem", "offset": "0x45B24"},
+                    {"name": "BonusGauge等级", "type": "u8",  "block": "mem", "offset": "0x45B26"}
+                ],
+                "魔界医院": [
+                    {"name": "SP恢复",         "type": "u64", "block": "mem", "offset": "0x1590"},
+                    {"name": "HP恢复",         "type": "u64", "block": "mem", "offset": "0x1588"},
+                    {"name": "复活",           "type": "u32", "block": "mem", "offset": "0x45B00"}
+                ],
+                "商店": [
+                    {"name": "HL消费",         "type": "u64", "block": "mem", "offset": "0x1578"},
+                    {"name": "顾客等级",       "type": "u8",  "block": "mem", "offset": "0x45B3B"},
+                    {"name": "商品等级",       "type": "u8",  "block": "mem", "offset": "0x45B3C"}
+                ],
+                "+记录": [
+                    {"name": "小时",           "type": "u16", "block": "mem", "offset": "0x12E8"},
+                    {"name": "分钟",           "type": "u8",  "block": "mem", "offset": "0x12EA"},
+                    {"name": "秒",             "type": "u8",  "block": "mem", "offset": "0x12EB"},
+                    {"name": "通关次数",       "type": "u16", "block": "mem", "offset": "0x1316"},
+                    {"name": "最大伤害",       "type": "u32", "block": "mem", "offset": "0x460E0"},
+                    {"name": "总体伤害",       "type": "u32", "block": "mem", "offset": "0x460E4"},
+                    {"name": "地形连锁",       "type": "u32", "block": "mem", "offset": "0x460E8"},
+                    {"name": "伙伴击杀",       "type": "u32", "block": "mem", "offset": "0x460F0"},
+                    {"name": "敌人击杀",       "type": "u32", "block": "mem", "offset": "0x460F4"},
+                    {"name": "最大等级",       "type": "u32", "block": "mem", "offset": "0x460FC"},
+                    {"name": "转生次数",       "type": "u32", "block": "mem", "offset": "0x46100"},
+                    {"name": "人物制作率",     "type": "u32", "block": "mem", "offset": "0x46110"},
+                    {"name": "物品收集率",     "type": "u32", "block": "mem", "offset": "0x46104"},
+                    {"name": "道具界次数",     "type": "u32", "block": "mem", "offset": "0x46108"},
+                    {"name": "道具界层数",     "type": "u32", "block": "mem", "offset": "0x4610C"}
+                ],
+                "+功能": [
+                    {"name": "快速升级",      "type": "blk", "block": "prog", "offset": [{"search": "01 01 11 51 04 E9 45 FF FF FF", "skip": 5, "patch": "0C 01 D1 C8 01 01 11 51 04"}]},
+                    {"name": "无限移动",   "type": "blk", "block": "prog", "offset": [{"search": "88 86 02 04 00 00 EB 0A", "skip": 6, "patch": "B0 00 88 86 02 04 00 00"}, {"search": "C6 87 03 04 00 00 01 0F BF 87 EE 03 00 00 C1 E0 05 0F", "skip": 7, "patch": "C6 87 03 04 00 00 00"}]},
+                    {"name": "快速BonusGauge", "type": "blk", "block": "prog", "offset": [{"search": "66 A3 24 X0 X1 X2 66 83 F8 64", "skip": 6, "patch": "66 B8 64 00 66 A3 24 X0 X1 X2"}]}
+                ]
+            }
+        }
+    }
+}
