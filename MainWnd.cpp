@@ -1,8 +1,9 @@
 #include "pch.h"
 
-#include "MainDlg.h"
+#include "MainWnd.h"
 
 #include "ProcEdit.h"
+#include "Zetta!.h"
 
 std::wstring U2W(const std::string& n) {
     std::wstring r;
@@ -12,70 +13,13 @@ std::wstring U2W(const std::string& n) {
     return r;
 }
 
-CMainDlg::CMainDlg() {
-}
 
-CMainDlg::~CMainDlg() {
-}
-
-LRESULT CMainDlg::OnInitDialog(HWND, LPARAM) {
-    // center the dialog on the screen
-    CenterWindow();
-
-    TCHAR path[256];
-    TCHAR ver[256];
-    GetModuleFileName(NULL, path, 256);
-    GetFileVersion(path, ver);
-    {
-        TCHAR title[256];
-        GetWindowText(title, 256);
-        lstrcat(title, _T(" v"));
-        lstrcat(title, ver);
-        SetWindowText(title);
-    }
-
-    // set icons
-    /*
-    HICON hIcon = (HICON)::LoadImage(_Module.GetResourceInstance(), MAKEINTRESOURCE(IDI_ICON),
-    IMAGE_ICON, ::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR);
-    SetIcon(hIcon, TRUE);
-    HICON hIconSmall = (HICON)::LoadImage(_Module.GetResourceInstance(), MAKEINTRESOURCE(IDI_ICON),
-    IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
-    SetIcon(hIconSmall, FALSE);
-    */
-
-    CFontHandle fh = this->GetFont();
-    CLogFont lf;
-    fh.GetLogFont(&lf);
-    lstrcpy(lf.lfFaceName, _T("SimSun"));
-    lf.lfHeight = -12;
-    fnt.CreateFontIndirect(&lf);
-    lf.lfHeight = -16;
-    lf.lfWeight = FW_BOLD;
-    fnt2.CreateFontIndirect(&lf);
-
-    BuildForm();
-    Update();
-
-    SetTimer(IDT_UPDATE, 1000, NULL);
-
-    return TRUE;
-}
-
-void CMainDlg::OnCloseDialog() {
-    DestroyWindow();
-    ::PostQuitMessage(0);
-}
-
-void CMainDlg::OnTimer(UINT_PTR) {
-    Update();
-}
-
-LRESULT CMainDlg::OnBytes(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
+LRESULT CCommonPanel::OnBytes(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
     if (nNotifyCode != BN_CLICKED) return 0;
     PatchAddr* p = (PatchAddr*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
     if (p == NULL) return 0;
-    if (IsDlgButtonChecked(nID)) {
+    CButton btn = hWnd;
+    if (btn.GetCheck()) {
         for (auto& pp : p->bytes) {
             gProcEdit.MakePatch(pp.search, pp.searchMask, pp.patch, pp.patchMask, pp.skip, pp.poff);
         }
@@ -87,7 +31,7 @@ LRESULT CMainDlg::OnBytes(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
     return 0;
 }
 
-LRESULT CMainDlg::OnEdit(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
+LRESULT CCommonPanel::OnEdit(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
     if (nNotifyCode != EN_CHANGE) return 0;
     PatchAddr* p = (PatchAddr*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
     if (p == NULL) return 0;
@@ -124,39 +68,165 @@ LRESULT CMainDlg::OnEdit(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
     return 0;
 }
 
-void CMainDlg::Clear() {
-    for (auto& p : pn) {
-        p->DestroyWindow();
-        delete p;
+
+CMainWnd::CMainWnd() {
+    WIN32_FIND_DATA ffd;
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+
+    TCHAR path[256];
+    GetModuleFileName(NULL, path, 256);
+    PathRemoveFileSpec(path);
+    PathAppend(path, _T("plugins"));
+    TCHAR wc[256];
+    lstrcpy(wc, path);
+    PathAppend(wc, _T("*.dll"));
+
+    hFind = FindFirstFile(wc, &ffd);
+
+    if (INVALID_HANDLE_VALUE == hFind) return;
+
+    do {
+        if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+        TCHAR fname[256];
+        lstrcpy(fname, path);
+        PathAppend(fname, ffd.cFileName);
+        HMODULE mod = LoadLibrary(fname);
+        if (mod == nullptr) continue;
+        PLUGINLOADPROC loadProc = (PLUGINLOADPROC)GetProcAddress(mod, "GetPlugin");
+        if (loadProc == nullptr) {
+            FreeLibrary(mod);
+            continue;
+        }
+        IPlugin* plugin = loadProc();
+        if (plugin != nullptr)
+            plugins_.push_back(plugin);
+        else
+            FreeLibrary(mod);
+    } while (FindNextFile(hFind, &ffd) != 0);
+
+    FindClose(hFind);
+}
+
+CMainWnd::~CMainWnd() {
+}
+
+LRESULT CMainWnd::OnCreate(LPCREATESTRUCT) {
+    auto icon = LoadIcon(_Module.GetResourceInstance(), MAKEINTRESOURCE(IDI_MAINICON));
+    SetIcon(icon, TRUE);
+    SetIcon(icon, FALSE);
+    // center the dialog on the screen
+    CenterWindow();
+
+    TCHAR path[256];
+    TCHAR ver[256];
+    GetModuleFileName(NULL, path, 256);
+    GetFileVersion(path, ver);
+    {
+        TCHAR title[256];
+        GetWindowText(title, 256);
+        lstrcat(title, _T(" v"));
+        lstrcat(title, ver);
+        SetWindowText(title);
     }
-    pn.clear();
-    for (auto& l : lb) {
+
+    fnt_.CreatePointFont(90, _T("SimSun"));
+    fnt2_.CreatePointFont(150, _T("SimSun"), 0, true);
+    fnt3_.CreatePointFont(120, _T("SimSun"), 0, true);
+
+    BuildForm();
+    Update();
+
+    SetTimer(IDT_UPDATE, 1000, NULL);
+
+    return TRUE;
+}
+
+void CMainWnd::OnDestroy() {
+    Clear();
+}
+
+void CMainWnd::OnCloseDialog() {
+    DestroyWindow();
+    ::PostQuitMessage(0);
+}
+
+BOOL CMainWnd::OnEraseBkGnd(HDC hdc) {
+    CDCHandle dc = hdc;
+
+    // Save old brush
+    CBrush brush;
+    brush.CreateSolidBrush(::GetSysColor(COLOR_3DFACE));
+    CBrushHandle oldBrush = dc.SelectBrush(brush);
+
+    CRect rect;
+    dc.GetClipBox(&rect);     // Erase the area needed
+
+    dc.PatBlt(rect.left, rect.top, rect.Width(), rect.Height(),
+        PATCOPY);
+    dc.SelectBrush(oldBrush);
+    return TRUE;
+}
+
+LRESULT CMainWnd::OnTabChange(int, LPNMHDR, BOOL&) {
+    auto sel = tabctrl_.GetCurSel();
+    if (sel < 0) return 0;
+    if (lastsel_ > 0)
+        ShowPlugin((size_t)(lastsel_ - 1), false);
+    else if (lastsel_ == 0) {
+        for (auto& c : cpanels_)
+            c->ShowWindow(SW_HIDE);
+    }
+    if (sel > 0)
+        ShowPlugin((size_t)(sel - 1), true);
+    else {
+        for (auto& c : cpanels_)
+            c->ShowWindow(SW_SHOW);
+    }
+    lastsel_ = sel;
+    return 0;
+}
+
+void CMainWnd::OnTimer(UINT_PTR) {
+    Update();
+}
+
+void CMainWnd::Clear() {
+    lastsel_ = -1;
+    UnloadPlugins();
+    for (auto& l : labels_) {
         l->DestroyWindow();
         delete l;
     }
-    lb.clear();
-    for (auto& t : tb) {
+    labels_.clear();
+    for (auto& t : textboxes_) {
         t->DestroyWindow();
         delete t;
     }
-    tb.clear();
-    for (auto& c : cb) {
+    textboxes_.clear();
+    for (auto& c : checkboxes_) {
         c->DestroyWindow();
         delete c;
     }
-    cb.clear();
+    checkboxes_.clear();
+    for (auto& p : cpanels_) {
+        p->DestroyWindow();
+        delete p;
+    }
+    cpanels_.clear();
+    if (tabctrl_.IsWindow())
+        tabctrl_.DestroyWindow();
 }
 
-void CMainDlg::BuildForm() {
+void CMainWnd::BuildForm() {
     Clear();
-    if (spec == nullptr) {
+    if (spec_ == nullptr) {
         CDC dc = CreateCompatibleDC(GetDC());
-        dc.SelectFont(fnt);
+        dc.SelectFont(fnt_);
         
         auto* lab = new CStatic;
         const TCHAR* caption = _T("Waiting for game...");
         lab->Create(m_hWnd, 0, caption, WS_VISIBLE | WS_CHILD | SS_CENTER);
-        lab->SetFont(fnt);
+        lab->SetFont(fnt_);
         SIZE sz;
         dc.GetTextExtent(caption, lstrlen(caption), &sz);
         auto w = std::max(400, (int)sz.cx + 16);
@@ -168,27 +238,33 @@ void CMainDlg::BuildForm() {
         auto l = (w - sz.cx) / 2;
         auto t = (h - sz.cy) / 2;
         lab->MoveWindow(CRect(l, t, l + sz.cx, t + sz.cy));
-        lb.push_back(lab);
+        labels_.push_back(lab);
     } else {
         CDC dc = CreateCompatibleDC(GetDC()), dc2 = CreateCompatibleDC(GetDC());
-        dc.SelectFont(fnt);
-        dc2.SelectFont(fnt2);
+        dc.SelectFont(fnt_);
+        dc2.SelectFont(fnt2_);
+
+        tabctrl_.Create(m_hWnd, CRect(0, 0, 100, 100), NULL, WS_VISIBLE | WS_CHILD | TCS_SINGLELINE, 0, IDC_TABS);
+        tabctrl_.SetFont(fnt3_);
+        tabctrl_.AddItem(_T("Í¨ÓÃ"));
+        CRect trc;
+        tabctrl_.GetItemRect(0, trc);
 
         unsigned maxheight = 0, maxwidth = 0;
-        unsigned currleft = 0, currtop = 8;
-        for (auto& b : spec->blocks) {
+        unsigned currleft = 0, currtop = trc.Height() + 8;
+        for (auto& b : spec_->blocks) {
             if (b.newColumn) {
                 currleft += maxwidth + 8;
-                currtop = 8;
+                currtop = trc.Height() + 8;
                 maxwidth = 0;
             }
             auto lasttop = currtop;
-            auto* pan = new CStatic;
+            auto* pan = new CCommonPanel;
             std::wstring bname = U2W(b.name);
-            pan->Create(m_hWnd, 0, _T(""), WS_VISIBLE | WS_CHILD | WS_BORDER);
-            pan->SetFont(fnt2);
+            pan->Create(tabctrl_.m_hWnd, 0, _T(""), WS_VISIBLE | WS_CHILD | WS_BORDER);
+            pan->SetFont(fnt2_);
             pan->MoveWindow(CRect(currleft, currtop, currleft + 500, currtop + 500));
-            pn.push_back(pan);
+            cpanels_.push_back(pan);
 
             SIZE sz;
             dc2.GetTextExtent(bname.c_str(), bname.length(), &sz);
@@ -203,31 +279,31 @@ void CMainDlg::BuildForm() {
 
             maxwidth = std::max(maxwidth, cwidth + 16 + 100 + 8);
             auto* lab = new CStatic;
-            lab->Create(m_hWnd, 0, bname.c_str(), WS_VISIBLE | WS_CHILD | SS_CENTER);
-            lab->SetFont(fnt2);
-            lab->MoveWindow(CRect(currleft + 8, currtop + 8, currleft + 8 + maxwidth - 16, currtop + 8 + 30));
-            lb.push_back(lab);
-            currtop += 30 + 4;
+            lab->Create(pan->m_hWnd, 0, bname.c_str(), WS_VISIBLE | WS_CHILD | SS_CENTER);
+            lab->SetFont(fnt2_);
+            lab->MoveWindow(CRect(8, 8, 8 + maxwidth - 16, 8 + 30));
+            labels_.push_back(lab);
+            currtop += 30 + 10;
             unsigned cleft = 8 + cwidth + 8;
             for (auto& p : b.patches) {
                 auto* lab2 = new CStatic;
                 auto pname = U2W(p.name);
-                lab2->Create(m_hWnd, 0, pname.c_str(), WS_VISIBLE | WS_CHILD | SS_RIGHT);
-                lab2->SetFont(fnt);
-                lab2->MoveWindow(CRect(currleft + 8, currtop, currleft + 8 + cwidth, currtop + 20));
-                lb.push_back(lab2);
+                lab2->Create(pan->m_hWnd, 0, pname.c_str(), WS_VISIBLE | WS_CHILD | SS_RIGHT);
+                lab2->SetFont(fnt_);
+                lab2->MoveWindow(CRect(8, currtop - lasttop, 8 + cwidth, currtop - lasttop + 20));
+                labels_.push_back(lab2);
                 if (p.type == PT_BYTES) {
                     auto* chb = new CButton;
-                    chb->Create(m_hWnd, CRect(currleft + 8 + cwidth + 8, currtop - 2, currleft + 8 + cwidth + 8 + 20, currtop - 2 + 20), _T(""), WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX, 0, IDC_BYTESBASE + p.offset);
+                    chb->Create(pan->m_hWnd, CRect(8 + cwidth + 8, currtop - lasttop - 2, 8 + cwidth + 8 + 18, currtop - lasttop - 2 + 18), _T(""), WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX, 0, IDC_BYTESBASE + p.offset);
                     chb->SetWindowLongPtr(GWLP_USERDATA, (LONG_PTR)&p);
-                    cb.push_back(chb);
+                    checkboxes_.push_back(chb);
                 } else {
                     auto* teb = new CEdit;
-                    teb->Create(m_hWnd, CRect(currleft + 8 + cwidth + 8, currtop - 2, currleft + 8 + cwidth + 8 + 100, currtop - 2 + 17), _T(""), WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER | ES_AUTOHSCROLL | ES_LEFT | ES_NOIME, 0, IDC_EDITBASE + p.index);
+                    teb->Create(pan->m_hWnd, CRect(8 + cwidth + 8, currtop - lasttop - 2, 8 + cwidth + 8 + 100, currtop - lasttop - 2 + 17), _T(""), WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER | ES_AUTOHSCROLL | ES_LEFT | ES_NOIME, 0, IDC_EDITBASE + p.index);
                     teb->SetWindowLongPtr(GWLP_USERDATA, (LONG_PTR)&p);
-                    teb->SetFont(fnt);
-                    tb.push_back(teb);
-                    assigns[p.index] = teb;
+                    teb->SetFont(fnt_);
+                    textboxes_.push_back(teb);
+                    assigns_[p.index] = teb;
                 }
                 currtop += 20 + 4;
             }
@@ -240,18 +316,23 @@ void CMainDlg::BuildForm() {
             maxheight = std::max(maxheight, currtop);
             currtop += 4;
         }
-        CRect rc;
-        GetWindowRect(rc);
+        CRect wrc, rc;
+        GetWindowRect(wrc);
+        GetClientRect(rc);
         rc.right = rc.left + currleft + maxwidth + 8;
         rc.bottom = rc.top + maxheight + 16;
+        tabctrl_.MoveWindow(CRect(0, 0, rc.Width(), rc.Height()));
         AdjustWindowRectEx(rc, GetStyle() & ~WS_OVERLAPPED, FALSE, GetExStyle());
-        MoveWindow(rc);
+        MoveWindow(CRect(wrc.left, wrc.top, wrc.left + rc.Width(), wrc.top + rc.Height()));
+        LoadPlugins();
+        tabctrl_.SetCurSel(0);
+        lastsel_ = 0;
     }
 }
 
-void CMainDlg::Update() {
+void CMainWnd::Update() {
     if (!CheckProcess()) return;
-    for (auto& b : spec->blocks) {
+    for (auto& b : spec_->blocks) {
         for (auto& p : b.patches) {
             std::string val;
             switch (p.type) {
@@ -282,7 +363,7 @@ void CMainDlg::Update() {
             default:
                 continue;
             }
-            auto* lab = assigns[p.index];
+            auto* lab = assigns_[p.index];
             if (lab == nullptr) continue;
             char n[256];
             GetWindowTextA(lab->m_hWnd, n, 256);
@@ -296,10 +377,10 @@ void CMainDlg::Update() {
     }
 }
 
-bool CMainDlg::CheckProcess() {
+bool CMainWnd::CheckProcess() {
     int r = gProcEdit.Check();
     if (r > 0) return true;
-    spec = nullptr;
+    spec_ = nullptr;
     gProcEdit.Find(gPatch.className);
     if (!gProcEdit.Found()) {
         if (r < 0) BuildForm();
@@ -307,15 +388,35 @@ bool CMainDlg::CheckProcess() {
     }
     auto ite = gPatch.versions.find(gProcEdit.GetVersion());
     if (ite == gPatch.versions.end()) {
-        if (!lb.empty())
-            SetWindowTextA(lb.back()->m_hWnd, ("Unsupported version: " + gProcEdit.GetVersion()).c_str());
+        if (!labels_.empty())
+            SetWindowTextA(labels_.back()->m_hWnd, ("Unsupported version: " + gProcEdit.GetVersion()).c_str());
         return false;
     }
-    spec = &ite->second;
-    gProcEdit.UpdateAddr(spec->memAddr);
+    spec_ = &ite->second;
+    gProcEdit.UpdateAddr(spec_->memAddr);
 #ifdef _DEBUG
     gProcEdit.DumpMemory();
 #endif
     BuildForm();
     return true;
+}
+
+void CMainWnd::LoadPlugins() {
+    for (auto* p : plugins_) {
+        p->Enable(&gProcEdit, tabctrl_.m_hWnd);
+        tabctrl_.AddItem(p->GetName());
+    }
+}
+
+void CMainWnd::UnloadPlugins() {
+    for (auto* p : plugins_)
+        p->Disable();
+}
+
+void CMainWnd::ShowPlugin(size_t index, bool show) {
+    if (index >= plugins_.size()) return;
+    if (show)
+        plugins_[index]->Show();
+    else
+        plugins_[index]->Hide();
 }

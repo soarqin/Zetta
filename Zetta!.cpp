@@ -6,7 +6,7 @@
 #include "Zetta!.h"
 
 #include "resource.h"
-#include "MainDlg.h"
+#include "MainWnd.h"
 #include "Patch.h"
 
 void GetFileVersion(LPCTSTR fname, LPTSTR ver) {
@@ -36,12 +36,13 @@ CAppModule _Module;
 int Run(LPTSTR /*lpCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT) {
     CMessageLoop theLoop;
     _Module.AddMessageLoop(&theLoop);
-    CMainDlg dlgMain;
-    if (dlgMain.Create(NULL) == NULL) {
-        ATLTRACE(_T("Main dialog creation failed!\n"));
+    CMainWnd wndMain;
+    if (wndMain.Create(NULL, CWindow::rcDefault, _T("Zetta!"), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX) == NULL) {
+        ATLTRACE(_T("Main window creation failed!\n"));
         return 0;
     }
-    dlgMain.ShowWindow(nCmdShow);
+    wndMain.ShowWindow(nCmdShow);
+    wndMain.UpdateWindow();
     int nRet = theLoop.Run();
     _Module.RemoveMessageLoop();
     return nRet;

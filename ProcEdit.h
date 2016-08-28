@@ -1,13 +1,15 @@
 #pragma once
 
+#include "IPlugin.h"
+
 #include <Windows.h>
 #include <string>
 #include <vector>
 #include <map>
 
-class ProcEdit {
+class ProcEdit: public IProcEdit {
 public:
-    ~ProcEdit();
+    virtual ~ProcEdit() override;
     void Find(const std::string& className);
     int Check();
     void UpdateAddr(uintptr_t offset);
@@ -17,21 +19,23 @@ public:
     }
     template<typename T>
     inline T Read(bool mem, uintptr_t addr) {
-        SIZE_T nread = 0;
         T result = T();
-        ReadProcessMemory(hProc_, (mem ? memAddr_ : baseAddr_) + addr, &result, sizeof(T), &nread);
+        Read(mem, addr, &result, sizeof(T));
         return result;
     }
     template<typename T>
     inline void Write(bool mem, uintptr_t addr, T value) {
-        SIZE_T nwrite = 0;
-        WriteProcessMemory(hProc_, (mem ? memAddr_ : baseAddr_) + addr, &value, sizeof(T), &nwrite);
+        Write(mem, addr, &value, sizeof(T));
     }
-    inline void Write(bool mem, uintptr_t addr, void* buf, size_t count) {
+    virtual void Read(bool mem, uintptr_t addr, void* buf, size_t count) override {
+        SIZE_T nread = 0;
+        ReadProcessMemory(hProc_, (mem ? memAddr_ : baseAddr_) + addr, buf, count, &nread);
+    }
+    virtual void Write(bool mem, uintptr_t addr, const void* buf, size_t count) override {
         SIZE_T nwrite = 0;
         WriteProcessMemory(hProc_, (mem ? memAddr_ : baseAddr_) + addr, buf, count, &nwrite);
     }
-    inline std::string GetVersion() {
+    virtual const std::string& GetVersion() override {
         return version_;
     }
     void MakePatch(const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff);
