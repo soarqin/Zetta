@@ -13,7 +13,8 @@ public:
     LRESULT OnBytes(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
     LRESULT OnEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
-    BEGIN_MSG_MAP_EX(CMainWnd)
+private:
+    BEGIN_MSG_MAP_EX(CCommonPanel)
         COMMAND_RANGE_HANDLER(IDC_BYTESBASE, IDC_BYTESBASE + 500, OnBytes)
         COMMAND_RANGE_HANDLER(IDC_EDITBASE, IDC_EDITBASE + 500, OnEdit)
     END_MSG_MAP()
@@ -48,7 +49,6 @@ private:
     bool CheckProcess();
     void LoadPlugins();
     void UnloadPlugins();
-    void ShowPlugin(size_t index, bool show);
 
 private:
     std::vector<CCommonPanel*> cpanels_;

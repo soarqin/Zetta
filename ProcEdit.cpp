@@ -46,7 +46,6 @@ void ProcEdit::UpdateAddr(uintptr_t offset) {
     baseAddr_ = NULL;
     memAddr_ = NULL;
     baseSize_ = 0;
-    memSize_ = 0;
     HANDLE snaphot_handle = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetProcessId(hProc_));
     if (snaphot_handle != INVALID_HANDLE_VALUE) {
         MODULEENTRY32 mod_entry;
@@ -67,19 +66,15 @@ void ProcEdit::UpdateAddr(uintptr_t offset) {
             baseSize_ = addr - baseAddr_;
             break;
         }
-        if ((LPBYTE)info.BaseAddress <= memAddr_ && addr > memAddr_ && info.Protect == 4 && info.Type == 0x1000000) {
-            memSize_ = addr - memAddr_;
-            break;
-        }
     }
     virtAddr_ = (LPBYTE)VirtualAllocEx(hProc_, 0, 256, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 }
 
 void ProcEdit::DumpMemory() {
     FILE* f = fopen("dump.bin", "wb");
-    LPVOID buff = malloc(memSize_);
+    LPVOID buff = malloc(0x200000);
     SIZE_T sread = 0;
-    ReadProcessMemory(hProc_, memAddr_, buff, memSize_, &sread);
+    ReadProcessMemory(hProc_, memAddr_, buff, 0x200000, &sread);
     fwrite(buff, 1, sread, f);
     fclose(f);
     free(buff);
@@ -171,7 +166,6 @@ void ProcEdit::Cleanup() {
         virtAddr_ = NULL;
     }
     baseSize_ = 0;
-    memSize_ = 0;
     version_.clear();
     if (hProc_ != NULL) {
         CloseHandle(hProc_);

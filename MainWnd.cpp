@@ -98,9 +98,10 @@ CMainWnd::CMainWnd() {
             continue;
         }
         IPlugin* plugin = loadProc();
-        if (plugin != nullptr)
+        if (plugin != nullptr) {
+            plugin->Init(&_Module);
             plugins_.push_back(plugin);
-        else
+        } else
             FreeLibrary(mod);
     } while (FindNextFile(hFind, &ffd) != 0);
 
@@ -170,19 +171,23 @@ BOOL CMainWnd::OnEraseBkGnd(HDC hdc) {
 LRESULT CMainWnd::OnTabChange(int, LPNMHDR, BOOL&) {
     auto sel = tabctrl_.GetCurSel();
     if (sel < 0) return 0;
-    if (lastsel_ > 0)
-        ShowPlugin((size_t)(lastsel_ - 1), false);
+    if (lastsel_ > 0) {
+        if ((size_t)lastsel_ <= plugins_.size())
+            plugins_[lastsel_ - 1]->Hide();
+    }
     else if (lastsel_ == 0) {
         for (auto& c : cpanels_)
             c->ShowWindow(SW_HIDE);
     }
-    if (sel > 0)
-        ShowPlugin((size_t)(sel - 1), true);
-    else {
+    if (sel > 0) {
+        if ((size_t)sel <= plugins_.size())
+            plugins_[sel - 1]->Show();
+    } else {
         for (auto& c : cpanels_)
             c->ShowWindow(SW_SHOW);
     }
     lastsel_ = sel;
+    Update();
     return 0;
 }
 
@@ -332,6 +337,14 @@ void CMainWnd::BuildForm() {
 
 void CMainWnd::Update() {
     if (!CheckProcess()) return;
+    if (!tabctrl_.IsWindow()) return;
+    auto sel = tabctrl_.GetCurSel();
+    if (sel < 0) return;
+    if (sel > 0) {
+        if ((size_t)sel <= plugins_.size())
+            plugins_[sel - 1]->Tick();
+        return;
+    }
     for (auto& b : spec_->blocks) {
         for (auto& p : b.patches) {
             std::string val;
@@ -411,12 +424,4 @@ void CMainWnd::LoadPlugins() {
 void CMainWnd::UnloadPlugins() {
     for (auto* p : plugins_)
         p->Disable();
-}
-
-void CMainWnd::ShowPlugin(size_t index, bool show) {
-    if (index >= plugins_.size()) return;
-    if (show)
-        plugins_[index]->Show();
-    else
-        plugins_[index]->Hide();
 }

@@ -19,6 +19,9 @@
                     {"name": "顾客等级",       "type": "u8",  "block": "mem", "offset": "0x45B3B"},
                     {"name": "商品等级",       "type": "u8",  "block": "mem", "offset": "0x45B3C"}
                 ],
+                "道具界": [
+                    {"name": "当前层数-1",       "type": "u8",  "block": "mem", "offset": "0x45B2C"}
+                ],
                 "+记录": [
                     {"name": "小时",           "type": "u16", "block": "mem", "offset": "0x12E8"},
                     {"name": "分钟",           "type": "u8",  "block": "mem", "offset": "0x12EA"},
@@ -60,6 +63,9 @@
                     {"name": "HL消费",         "type": "u64", "block": "mem", "offset": "0x1578"},
                     {"name": "顾客等级",       "type": "u8",  "block": "mem", "offset": "0x45B3B"},
                     {"name": "商品等级",       "type": "u8",  "block": "mem", "offset": "0x45B3C"}
+                ],
+                "道具界": [
+                    {"name": "当前层数-1",       "type": "u8",  "block": "mem", "offset": "0x45B2C"}
                 ],
                 "+记录": [
                     {"name": "小时",           "type": "u16", "block": "mem", "offset": "0x12E8"},

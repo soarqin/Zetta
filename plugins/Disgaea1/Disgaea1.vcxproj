@@ -150,6 +150,9 @@
   <ItemGroup>
     <ClCompile Include="PluginMain.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Unit.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

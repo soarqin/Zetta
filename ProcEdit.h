@@ -35,6 +35,14 @@ public:
         SIZE_T nwrite = 0;
         WriteProcessMemory(hProc_, (mem ? memAddr_ : baseAddr_) + addr, buf, count, &nwrite);
     }
+    virtual void ReadRaw(uintptr_t addr, void* buf, size_t count) override {
+        SIZE_T nread = 0;
+        ReadProcessMemory(hProc_, (void*)addr, buf, count, &nread);
+    }
+    virtual void WriteRaw(uintptr_t addr, const void* buf, size_t count) override {
+        SIZE_T nwrite = 0;
+        WriteProcessMemory(hProc_, (void*)addr, buf, count, &nwrite);
+    }
     virtual const std::string& GetVersion() override {
         return version_;
     }
@@ -48,7 +56,7 @@ private:
     HANDLE hProc_ = NULL;
     LPBYTE baseAddr_ = NULL, memAddr_ = NULL;
     LPBYTE virtAddr_ = NULL;
-    SIZE_T baseSize_ = 0, memSize_ = 0;
+    SIZE_T baseSize_ = 0;
     std::string version_;
     std::map<size_t, std::pair<BYTE*, std::vector<uint8_t>>> patched_;
 };
