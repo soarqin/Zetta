@@ -74,11 +74,11 @@ public:
         lab[0].Create(panel_.m_hWnd, CRect(8, 18, 8 + rc.Width(), 48), _T("Ctrl+F1 我方HP/SP全满"), WS_VISIBLE | WS_CHILD);
         lab[1].Create(panel_.m_hWnd, CRect(8, 58, 8 + rc.Width(), 88), _T("Ctrl+F2 所有敌人生命为0"), WS_VISIBLE | WS_CHILD);
         lab[2].Create(panel_.m_hWnd, CRect(8, 98, 8 + rc.Width(), 128), _T("Ctrl+F3 当前目标HP/SP回满"), WS_VISIBLE | WS_CHILD);
-        lab[3].Create(panel_.m_hWnd, CRect(8, 138, 8 + rc.Width(), 168), _T("Ctrl+F4 当前目标HP为0"), WS_VISIBLE | WS_CHILD);
-        lab[4].Create(panel_.m_hWnd, CRect(8, 178, 8 + rc.Width(), 208), _T("Ctrl+F5 当前目标HP为1"), WS_VISIBLE | WS_CHILD);
-        lab[5].Create(panel_.m_hWnd, CRect(8, 218, 8 + rc.Width(), 248), _T("Ctrl+F6 议会议员好感为高"), WS_VISIBLE | WS_CHILD);
-        lab[6].Create(panel_.m_hWnd, CRect(8, 258, 8 + rc.Width(), 288), _T("Ctrl+F7 道具界下层为中转层"), WS_VISIBLE | WS_CHILD);
-        lab[7].Create(panel_.m_hWnd, CRect(8, 298, 8 + rc.Width(), 328), _T("Ctrl+F8 道具界99层"), WS_VISIBLE | WS_CHILD);
+        lab[3].Create(panel_.m_hWnd, CRect(8, 138, 8 + rc.Width(), 168), _T("Ctrl+F5 当前目标HP为0"), WS_VISIBLE | WS_CHILD);
+        lab[4].Create(panel_.m_hWnd, CRect(8, 178, 8 + rc.Width(), 208), _T("Ctrl+F6 当前目标HP为1"), WS_VISIBLE | WS_CHILD);
+        lab[5].Create(panel_.m_hWnd, CRect(8, 218, 8 + rc.Width(), 248), _T("Ctrl+F7 议会议员好感为高"), WS_VISIBLE | WS_CHILD);
+        lab[6].Create(panel_.m_hWnd, CRect(8, 258, 8 + rc.Width(), 288), _T("Ctrl+F8 道具界下层为中转层"), WS_VISIBLE | WS_CHILD);
+        lab[7].Create(panel_.m_hWnd, CRect(8, 298, 8 + rc.Width(), 328), _T("Ctrl+F9 道具界99层"), WS_VISIBLE | WS_CHILD);
         for (int i = 0; i < 8; ++i)
             lab[i].SetFont(fnt);
 
@@ -176,7 +176,7 @@ public:
         return true;
     }
 
-    bool OnF4() {
+    bool OnF5() {
         uint32_t off;
         proc_->Read(false, currentUnitOff_, &off, 4);
         off += 12;
@@ -187,7 +187,7 @@ public:
         return true;
     }
 
-    bool OnF5() {
+    bool OnF6() {
         uint32_t off;
         proc_->Read(false, currentUnitOff_, &off, 4);
         off += 12;
@@ -198,7 +198,7 @@ public:
         return true;
     }
 
-    bool OnF6() {
+    bool OnF7() {
         for (uintptr_t i = 0; i < 28; ++i) {
             int16_t n = 32767;
             proc_->Write(true, congressOff_ + 0x42C * i, &n, 2);
@@ -206,7 +206,7 @@ public:
         return true;
     }
 
-    bool OnF7() {
+    bool OnF8() {
         uint16_t count;
         proc_->Read(true, enemyCountOff_, &count, 2);
         if (count == 0) return false;
@@ -219,7 +219,7 @@ public:
         return true;
     }
 
-    bool OnF8() {
+    bool OnF9() {
         uint16_t count;
         proc_->Read(true, enemyCountOff_, &count, 2);
         if (count == 0) return false;
@@ -255,9 +255,6 @@ void CPluginPanel::OnHotkey(int id, UINT, UINT) {
     case IDH_F3:
         if (!gPlugin.OnF3()) return;
         break;
-    case IDH_F4:
-        if (!gPlugin.OnF4()) return;
-        break;
     case IDH_F5:
         if (!gPlugin.OnF5()) return;
         break;
@@ -270,7 +267,10 @@ void CPluginPanel::OnHotkey(int id, UINT, UINT) {
     case IDH_F8:
         if (!gPlugin.OnF8()) return;
         break;
-    default:
+	case IDH_F9:
+		if (!gPlugin.OnF9()) return;
+		break;
+	default:
         return;
     }
     Beep(300, 300);
