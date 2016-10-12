@@ -82,8 +82,9 @@ public:
         for (int i = 0; i < 8; ++i)
             lab[i].SetFont(fnt);
 
-        for (int id = IDH_F1; id <= IDH_F8; ++id)
-            RegisterHotKey(panel_.m_hWnd, id, 0x4000 | MOD_CONTROL, VK_F1 + (id - IDH_F1));
+        for (int id = IDH_F1; id <= IDH_F9; ++id)
+			if (id != IDH_F4)
+				RegisterHotKey(panel_.m_hWnd, id, 0x4000 | MOD_CONTROL, VK_F1 + (id - IDH_F1));
     }
 
     virtual void Disable() override {
