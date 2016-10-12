@@ -46,6 +46,9 @@ public:
     virtual const std::string& GetVersion() override {
         return version_;
     }
+	virtual uint32_t GetCRC() override {
+		return crc_;
+	}
     void MakePatch(const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff);
     void CancelPatch(size_t poff);
 
@@ -58,6 +61,7 @@ private:
     LPBYTE virtAddr_ = NULL;
     SIZE_T baseSize_ = 0;
     std::string version_;
+	uint32_t crc_;
     std::map<size_t, std::pair<BYTE*, std::vector<uint8_t>>> patched_;
 };
 

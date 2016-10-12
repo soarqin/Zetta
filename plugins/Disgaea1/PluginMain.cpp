@@ -46,8 +46,19 @@ public:
             congressOff_ = 0x12066A;
         } else if (proc->GetVersion() == "1.0.0.5") {
             enemyCountOff_ = 0x9F57E;
-            enemyStartOff_ = 0x120864;
-            currentUnitOff_ = 0x1AE474;
+			switch (proc->GetCRC()) {
+			case 0x4E7169ADu: /* U12 */
+			case 0xCDC33CBBu: /* U13 */
+				enemyStartOff_ = 0x120864;
+				break;
+			case 0xD8AE5E17u: /* U14 */
+				enemyStartOff_ = 0x120994;
+				break;
+			default:
+				enemyStartOff_ = 0;
+				break;
+			}
+			currentUnitOff_ = 0x1AE474;
             congressOff_ = 0x1209DA;
         } else return;
         proc_ = proc;
