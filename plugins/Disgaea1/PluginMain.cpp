@@ -50,16 +50,18 @@ public:
 			case 0x4E7169ADu: /* U12 */
 			case 0xCDC33CBBu: /* U13 */
 				enemyStartOff_ = 0x120864;
+                congressOff_ = 0x1209DA;
 				break;
 			case 0xD8AE5E17u: /* U14 */
 				enemyStartOff_ = 0x120994;
+                congressOff_ = 0x120B0A;
 				break;
 			default:
 				enemyStartOff_ = 0;
+                congressOff_ = 0;
 				break;
 			}
 			currentUnitOff_ = 0x1AE474;
-            congressOff_ = 0x1209DA;
         } else return;
         proc_ = proc;
         tabCtrl_ = (HWND)tc;
