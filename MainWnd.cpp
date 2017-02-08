@@ -172,16 +172,16 @@ LRESULT CMainWnd::OnTabChange(int, LPNMHDR, BOOL&) {
     auto sel = tabctrl_.GetCurSel();
     if (sel < 0) return 0;
     if (lastsel_ > 0) {
-        if ((size_t)lastsel_ <= plugins_.size())
-            plugins_[lastsel_ - 1]->Hide();
+        if ((size_t)lastsel_ <= pluginsEnabled_.size())
+			pluginsEnabled_[lastsel_ - 1]->Hide();
     }
     else if (lastsel_ == 0) {
         for (auto& c : cpanels_)
             c->ShowWindow(SW_HIDE);
     }
     if (sel > 0) {
-        if ((size_t)sel <= plugins_.size())
-            plugins_[sel - 1]->Show();
+        if ((size_t)sel <= pluginsEnabled_.size())
+			pluginsEnabled_[sel - 1]->Show();
     } else {
         for (auto& c : cpanels_)
             c->ShowWindow(SW_SHOW);
@@ -341,8 +341,8 @@ void CMainWnd::Update() {
     auto sel = tabctrl_.GetCurSel();
     if (sel < 0) return;
     if (sel > 0) {
-        if ((size_t)sel <= plugins_.size())
-            plugins_[sel - 1]->Tick();
+        if ((size_t)sel <= pluginsEnabled_.size())
+			pluginsEnabled_[sel - 1]->Tick();
         return;
     }
     for (auto& b : spec_->blocks) {
@@ -415,13 +415,17 @@ bool CMainWnd::CheckProcess() {
 }
 
 void CMainWnd::LoadPlugins() {
+	UnloadPlugins();
     for (auto* p : plugins_) {
-        p->Enable(&gProcEdit, tabctrl_.m_hWnd);
-        tabctrl_.AddItem(p->GetName());
+		if (p->Enable(&gProcEdit, tabctrl_.m_hWnd)) {
+			tabctrl_.AddItem(p->GetName());
+			pluginsEnabled_.push_back(p);
+		}
     }
 }
 
 void CMainWnd::UnloadPlugins() {
-    for (auto* p : plugins_)
+    for (auto* p : pluginsEnabled_)
         p->Disable();
+	pluginsEnabled_.clear();
 }

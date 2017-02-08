@@ -61,6 +61,7 @@ private:
     CFont fnt_, fnt2_, fnt3_;
     int lastsel_ = -1;
     std::vector<IPlugin*> plugins_;
+	std::vector<IPlugin*> pluginsEnabled_;
 
     BEGIN_MSG_MAP_EX(CMainWnd)
         MSG_WM_CREATE(OnCreate)

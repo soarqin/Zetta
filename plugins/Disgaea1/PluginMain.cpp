@@ -38,7 +38,7 @@ public:
         return L"¸ß¼¶";
     }
 
-    virtual void Enable(IProcEdit* proc, void* tc) override {
+    virtual bool Enable(IProcEdit* proc, void* tc) override {
         if (proc->GetVersion() == "1.0.0.3") {
             enemyCountOff_ = 0x9F57A;
             enemyStartOff_ = 0x1204F4;
@@ -62,7 +62,7 @@ public:
 				break;
 			}
 			currentUnitOff_ = 0x1AE474;
-        } else return;
+        } else return false;
         proc_ = proc;
         tabCtrl_ = (HWND)tc;
         CFontHandle fnt;
@@ -87,6 +87,8 @@ public:
         for (int id = IDH_F1; id <= IDH_F9; ++id)
 			if (id != IDH_F4)
 				RegisterHotKey(panel_.m_hWnd, id, 0x4000 | MOD_CONTROL, VK_F1 + (id - IDH_F1));
+
+		return true;
     }
 
     virtual void Disable() override {

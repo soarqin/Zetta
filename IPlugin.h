@@ -24,7 +24,7 @@ public:
 
     virtual void Init(WTL::CAppModule*) = 0;
     virtual LPCWSTR GetName() = 0;
-    virtual void Enable(IProcEdit*, void*) = 0;
+    virtual bool Enable(IProcEdit*, void*) = 0;
     virtual void Disable() = 0;
     virtual void Show() = 0;
     virtual void Hide() = 0;
