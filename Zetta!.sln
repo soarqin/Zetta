@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26206.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Zetta!", "Zetta!.vcxproj", "{C5CDA9D3-34FE-4390-A0D3-C1F69AD2B29D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{4CE4178B-A557-40EC-8F22-3EEC723972B1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Disgaea1", "plugins\Disgaea1\Disgaea1.vcxproj", "{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Disgaea1E", "plugins\Disgaea1E\Disgaea1E.vcxproj", "{5FF322E4-E71B-446C-8E9E-E7EF40438E5D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,11 +33,20 @@ Global
 		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Release|x64.Build.0 = Release|x64
 		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Release|x86.ActiveCfg = Release|Win32
 		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Release|x86.Build.0 = Release|Win32
+		{5FF322E4-E71B-446C-8E9E-E7EF40438E5D}.Debug|x64.ActiveCfg = Debug|x64
+		{5FF322E4-E71B-446C-8E9E-E7EF40438E5D}.Debug|x64.Build.0 = Debug|x64
+		{5FF322E4-E71B-446C-8E9E-E7EF40438E5D}.Debug|x86.ActiveCfg = Debug|Win32
+		{5FF322E4-E71B-446C-8E9E-E7EF40438E5D}.Debug|x86.Build.0 = Debug|Win32
+		{5FF322E4-E71B-446C-8E9E-E7EF40438E5D}.Release|x64.ActiveCfg = Release|x64
+		{5FF322E4-E71B-446C-8E9E-E7EF40438E5D}.Release|x64.Build.0 = Release|x64
+		{5FF322E4-E71B-446C-8E9E-E7EF40438E5D}.Release|x86.ActiveCfg = Release|Win32
+		{5FF322E4-E71B-446C-8E9E-E7EF40438E5D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3} = {4CE4178B-A557-40EC-8F22-3EEC723972B1}
+		{5FF322E4-E71B-446C-8E9E-E7EF40438E5D} = {4CE4178B-A557-40EC-8F22-3EEC723972B1}
 	EndGlobalSection
 EndGlobal
