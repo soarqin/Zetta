@@ -43,6 +43,9 @@ public:
         SIZE_T nwrite = 0;
         WriteProcessMemory(hProc_, (void*)addr, buf, count, &nwrite);
     }
+    virtual const std::string& ClassName() override {
+        return classname_;
+    }
     virtual const std::string& GetVersion() override {
         return version_;
     }
@@ -60,6 +63,7 @@ private:
     LPBYTE baseAddr_ = NULL, memAddr_ = NULL;
     LPBYTE virtAddr_ = NULL;
     SIZE_T baseSize_ = 0;
+    std::string classname_;
     std::string version_;
 	uint32_t crc_;
     std::map<size_t, std::pair<BYTE*, std::vector<uint8_t>>> patched_;

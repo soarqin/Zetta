@@ -53,8 +53,7 @@ struct PatchSpec {
 
 struct Patch {
     void Load(const char* filename);
-    std::string className;
-    std::map<std::string, PatchSpec> versions;
+    std::map<std::string, std::map<std::string, PatchSpec>> versions;
 };
 
 extern Patch gPatch;

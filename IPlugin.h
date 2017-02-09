@@ -14,6 +14,7 @@ public:
     virtual void Write(bool mem, uintptr_t addr, const void* buf, size_t count) = 0;
     virtual void ReadRaw(uintptr_t addr, void* buf, size_t count) = 0;
     virtual void WriteRaw(uintptr_t addr, const void* buf, size_t count) = 0;
+    virtual const std::string& ClassName() = 0;
     virtual const std::string& GetVersion() = 0;
 	virtual uint32_t GetCRC() = 0;
 };

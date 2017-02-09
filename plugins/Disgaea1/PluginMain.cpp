@@ -40,6 +40,7 @@ public:
     }
 
     virtual bool Enable(IProcEdit* proc, void* tc) override {
+        if (proc->ClassName() != "DISGAEA") return false;
         if (proc->GetVersion() == "1.0.0.3") {
             enemyCountOff_ = 0x9F57A;
             enemyStartOff_ = 0x1204F4;

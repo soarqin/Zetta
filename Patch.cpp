@@ -38,62 +38,66 @@ void Patch::Load(const char* filename) {
     FileReadStream is(fp, readBuffer, sizeof(readBuffer));
     Document d;
     d.ParseStream(is);
-    className = d["ClassName"].GetString();
-    auto vnode = d["Versions"].GetObject();
-    uint32_t index = 0;
-    size_t sz = 0;
-    for (auto m1 = vnode.MemberBegin(); m1 != vnode.MemberEnd(); ++m1) {
-        auto& spec = versions[m1->name.GetString()];
-        spec.memAddr = (uintptr_t)ParseUInt64(m1->value["MemAddr"].GetString());
-        auto mnode = m1->value["Offset"].GetObject();
-        for (auto m2 = mnode.MemberBegin(); m2 != mnode.MemberEnd(); ++m2) {
-            spec.blocks.resize(spec.blocks.size() + 1);
-            auto& block = spec.blocks.back();
-            block.name = m2->name.GetString();
-            if (block.name[0] == '+') {
-                block.newColumn = true;
-                block.name.erase(0, 1);
-            }
-            for (auto m3 = m2->value.Begin(); m3 != m2->value.End(); ++m3) {
-                block.patches.resize(block.patches.size() + 1);
-                auto& paddr = block.patches.back();
-                paddr.index = index++;
-                paddr.name = (*m3)["name"].GetString();
-                std::string tstr = (*m3)["type"].GetString();
-                if (tstr == "u8")
-                    paddr.type = PT_U8;
-                else if (tstr == "u16")
-                    paddr.type = PT_U16;
-                else if (tstr == "u32")
-                    paddr.type = PT_U32;
-                else if (tstr == "u64")
-                    paddr.type = PT_U64;
-                else if (tstr == "i8")
-                    paddr.type = PT_U8;
-                else if (tstr == "i16")
-                    paddr.type = PT_U16;
-                else if (tstr == "i32")
-                    paddr.type = PT_U32;
-                else if (tstr == "i64")
-                    paddr.type = PT_U64;
-                else
-                    paddr.type = PT_BYTES;
-                tstr = (*m3)["block"].GetString();
-                if (tstr == "mem")
-                    paddr.pos = PP_MEM;
-                else
-                    paddr.pos = PP_CODE;
-                if (paddr.type == PT_BYTES) {
-                    auto oobj = (*m3)["offset"].GetArray();
-                    for (auto m4 = oobj.Begin(); m4 != oobj.End(); ++m4) {
-                        PatchBytes pb = { (size_t)(*m4)["skip"].GetInt(), sz };
-                        ParseBytes((*m4)["patch"].GetString(), pb.patch, pb.patchMask);
-                        ParseBytes((*m4)["search"].GetString(), pb.search, pb.searchMask);
-                        paddr.bytes.push_back(pb);
-                        sz = (sz + pb.patch.size() + 5 + 0x0FUL) & ~0x0FUL;
+    for (auto d1 = d.MemberBegin(); d1 != d.MemberEnd(); ++d1) {
+        std::string className = d1->name.GetString();
+        auto& ver = versions[className];
+        auto vnode = d1->value.GetObject();
+        uint32_t index = 0;
+        size_t sz = 0;
+        for (auto m1 = vnode.MemberBegin(); m1 != vnode.MemberEnd(); ++m1) {
+            auto& spec = ver[m1->name.GetString()];
+            spec.memAddr = (uintptr_t)ParseUInt64(m1->value["MemAddr"].GetString());
+            auto mnode = m1->value["Offset"].GetObject();
+            for (auto m2 = mnode.MemberBegin(); m2 != mnode.MemberEnd(); ++m2) {
+                spec.blocks.resize(spec.blocks.size() + 1);
+                auto& block = spec.blocks.back();
+                block.name = m2->name.GetString();
+                if (block.name[0] == '+') {
+                    block.newColumn = true;
+                    block.name.erase(0, 1);
+                }
+                for (auto m3 = m2->value.Begin(); m3 != m2->value.End(); ++m3) {
+                    block.patches.resize(block.patches.size() + 1);
+                    auto& paddr = block.patches.back();
+                    paddr.index = index++;
+                    paddr.name = (*m3)["name"].GetString();
+                    std::string tstr = (*m3)["type"].GetString();
+                    if (tstr == "u8")
+                        paddr.type = PT_U8;
+                    else if (tstr == "u16")
+                        paddr.type = PT_U16;
+                    else if (tstr == "u32")
+                        paddr.type = PT_U32;
+                    else if (tstr == "u64")
+                        paddr.type = PT_U64;
+                    else if (tstr == "i8")
+                        paddr.type = PT_U8;
+                    else if (tstr == "i16")
+                        paddr.type = PT_U16;
+                    else if (tstr == "i32")
+                        paddr.type = PT_U32;
+                    else if (tstr == "i64")
+                        paddr.type = PT_U64;
+                    else
+                        paddr.type = PT_BYTES;
+                    tstr = (*m3)["block"].GetString();
+                    if (tstr == "mem")
+                        paddr.pos = PP_MEM;
+                    else
+                        paddr.pos = PP_CODE;
+                    if (paddr.type == PT_BYTES) {
+                        auto oobj = (*m3)["offset"].GetArray();
+                        for (auto m4 = oobj.Begin(); m4 != oobj.End(); ++m4) {
+                            PatchBytes pb = { (size_t)(*m4)["skip"].GetInt(), sz };
+                            ParseBytes((*m4)["patch"].GetString(), pb.patch, pb.patchMask);
+                            ParseBytes((*m4)["search"].GetString(), pb.search, pb.searchMask);
+                            paddr.bytes.push_back(pb);
+                            sz = (sz + pb.patch.size() + 5 + 0x0FUL) & ~0x0FUL;
+                        }
                     }
-                } else
-                    paddr.offset = (uintptr_t)ParseUInt64((*m3)["offset"].GetString());
+                    else
+                        paddr.offset = (uintptr_t)ParseUInt64((*m3)["offset"].GetString());
+                }
             }
         }
     }

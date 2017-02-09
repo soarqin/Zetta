@@ -1,6 +1,5 @@
 {
-    "ClassName": "DISGAEA",
-    "Versions": {
+    "DISGAEA": {
         "1.0.0.3": {
             "MemAddr": "0x214000",
             "Offset": {
@@ -91,5 +90,5 @@
                 ]
             }
         }
-    }
+	}
 }

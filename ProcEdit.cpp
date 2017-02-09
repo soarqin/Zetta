@@ -94,6 +94,14 @@ ProcEdit::~ProcEdit() {
 }
 
 void ProcEdit::Find(const std::string& className) {
+    classname_.clear();
+    version_.clear();
+    hProc_ = NULL;
+    baseAddr_ = NULL;
+    memAddr_ = NULL;
+    virtAddr_ = NULL;
+    baseSize_ = 0;
+    crc_ = 0;
     HWND hwnd = FindWindowA(className.c_str(), NULL);
     if (hwnd == NULL) return;
     DWORD procId = 0;
@@ -108,6 +116,7 @@ void ProcEdit::Find(const std::string& className) {
     GetFileVersion(fname, ver);
 	crc_ = crc_file(fname);
     version_.assign(ver, ver + lstrlen(ver));
+    classname_ = className;
 }
 
 int ProcEdit::Check() {

@@ -398,13 +398,20 @@ bool CMainWnd::CheckProcess() {
     int r = gProcEdit.Check();
     if (r > 0) return true;
     spec_ = nullptr;
-    gProcEdit.Find(gPatch.className);
-    if (!gProcEdit.Found()) {
+    std::map<std::string, PatchSpec>* ver = nullptr;
+    for (auto& p : gPatch.versions) {
+        gProcEdit.Find(p.first);
+        if (gProcEdit.Found()) {
+            ver = &p.second;
+            break;
+        }
+    }
+    if (!ver) {
         if (r < 0) BuildForm();
         return false;
     }
-    auto ite = gPatch.versions.find(gProcEdit.GetVersion());
-    if (ite == gPatch.versions.end()) {
+    auto ite = ver->find(gProcEdit.GetVersion());
+    if (ite == ver->end()) {
         if (!labels_.empty())
             SetWindowTextA(labels_.back()->m_hWnd, ("Unsupported version: " + gProcEdit.GetVersion()).c_str());
         return false;
