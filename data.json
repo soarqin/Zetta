@@ -1,4 +1,11 @@
 {
+	"Disgaea2 PC": {
+		"1.0.0.1": {
+			"MemAddr": "0x0",
+			"Offset": {
+			}
+		}
+	},
     "DISGAEA": {
         "1.0.0.3": {
             "MemAddr": "0x214000",

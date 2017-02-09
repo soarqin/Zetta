@@ -440,8 +440,6 @@ public:
 
     void OnChanged(uint32_t n) {
         if (changing_) return;
-        if (n >= (uint32_t)units_.size())
-            return;
         dirty_.insert(n);
     }
 
