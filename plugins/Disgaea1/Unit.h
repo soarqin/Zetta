@@ -81,9 +81,11 @@ struct UnitInfo {
     uint8_t Mv;
     uint8_t CountMx;
     uint8_t Counter;
-    uint8_t unk9[0x0d];
-    uint16_t Rank;
-    uint8_t unk10[0x29];
+    uint8_t unk9[0x01];
+	uint8_t SkillCount;
+	uint8_t unk10[0x0B];
+	uint16_t Rank;
+    uint8_t unk11[0x29];
 };
 #pragma pack(pop)
 
