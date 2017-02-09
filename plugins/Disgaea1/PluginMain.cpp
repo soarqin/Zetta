@@ -30,11 +30,12 @@ public:
 
     }
 
-    virtual void Init(CAppModule* mod) override {
+    virtual uint32_t Init(CAppModule* mod) override {
         module_ = mod;
+        return 1;
     }
 
-    virtual LPCWSTR GetName() override {
+    virtual LPCWSTR GetName(uint32_t page) override {
         return L"¸ß¼¶";
     }
 
@@ -104,15 +105,15 @@ public:
         units_.clear();
     }
 
-    virtual void Show() override {
+    virtual void Show(uint32_t page) override {
         panel_.ShowWindow(SW_SHOW);
     }
 
-    virtual void Hide() override {
+    virtual void Hide(uint32_t page) override {
         panel_.ShowWindow(SW_HIDE);
     }
 
-    virtual void Tick() override {
+    virtual void Tick(uint32_t page) override {
         /*
         uint16_t count;
         proc_->Read(true, 0x45B10, &count, 2);

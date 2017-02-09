@@ -15,7 +15,6 @@ std::wstring U2W(const std::string& n) {
 
 
 LRESULT CCommonPanel::OnBytes(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
-    if (nNotifyCode != BN_CLICKED) return 0;
     PatchAddr* p = (PatchAddr*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
     if (p == NULL) return 0;
     CButton btn = hWnd;
@@ -32,7 +31,6 @@ LRESULT CCommonPanel::OnBytes(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
 }
 
 LRESULT CCommonPanel::OnEdit(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
-    if (nNotifyCode != EN_CHANGE) return 0;
     PatchAddr* p = (PatchAddr*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
     if (p == NULL) return 0;
     char n[256];
@@ -99,8 +97,8 @@ CMainWnd::CMainWnd() {
         }
         IPlugin* plugin = loadProc();
         if (plugin != nullptr) {
-            plugin->Init(&_Module);
-            plugins_.push_back(plugin);
+            uint32_t n = plugin->Init(&_Module);
+            plugins_.push_back(std::make_pair(plugin, n));
         } else
             FreeLibrary(mod);
     } while (FindNextFile(hFind, &ffd) != 0);
@@ -172,16 +170,20 @@ LRESULT CMainWnd::OnTabChange(int, LPNMHDR, BOOL&) {
     auto sel = tabctrl_.GetCurSel();
     if (sel < 0) return 0;
     if (lastsel_ > 0) {
-        if ((size_t)lastsel_ <= pluginsEnabled_.size())
-			pluginsEnabled_[lastsel_ - 1]->Hide();
+        if ((size_t)lastsel_ <= pluginsEnabled_.size()) {
+            auto& plugin = pluginsEnabled_[lastsel_ - 1];
+            plugin.first->Hide(plugin.second);
+        }
     }
     else if (lastsel_ == 0) {
         for (auto& c : cpanels_)
             c->ShowWindow(SW_HIDE);
     }
     if (sel > 0) {
-        if ((size_t)sel <= pluginsEnabled_.size())
-			pluginsEnabled_[sel - 1]->Show();
+        if ((size_t)sel <= pluginsEnabled_.size()) {
+            auto& plugin = pluginsEnabled_[sel - 1];
+            plugin.first->Show(plugin.second);
+        }
     } else {
         for (auto& c : cpanels_)
             c->ShowWindow(SW_SHOW);
@@ -341,8 +343,10 @@ void CMainWnd::Update() {
     auto sel = tabctrl_.GetCurSel();
     if (sel < 0) return;
     if (sel > 0) {
-        if ((size_t)sel <= pluginsEnabled_.size())
-			pluginsEnabled_[sel - 1]->Tick();
+        if ((size_t)sel <= pluginsEnabled_.size()) {
+            auto& plugin = pluginsEnabled_[sel - 1];
+            plugin.first->Tick(plugin.second);
+        }
         return;
     }
     for (auto& b : spec_->blocks) {
@@ -416,16 +420,25 @@ bool CMainWnd::CheckProcess() {
 
 void CMainWnd::LoadPlugins() {
 	UnloadPlugins();
-    for (auto* p : plugins_) {
-		if (p->Enable(&gProcEdit, tabctrl_.m_hWnd)) {
-			tabctrl_.AddItem(p->GetName());
-			pluginsEnabled_.push_back(p);
+    for (auto& p : plugins_) {
+		if (p.first->Enable(&gProcEdit, tabctrl_.m_hWnd)) {
+            for (uint32_t i = 0; i < p.second; ++i) {
+                tabctrl_.AddItem(p.first->GetName(i));
+                pluginsEnabled_.push_back(std::make_pair(p.first, i));
+            }
 		}
     }
 }
 
 void CMainWnd::UnloadPlugins() {
-    for (auto* p : pluginsEnabled_)
-        p->Disable();
+    for (auto& p : pluginsEnabled_)
+        if (p.second == 0)
+            p.first->Disable();
 	pluginsEnabled_.clear();
+    if (!tabctrl_.IsWindow()) return;
+    auto count = tabctrl_.GetItemCount();
+    while (count > 1) {
+        tabctrl_.DeleteItem(count - 1);
+        count = tabctrl_.GetItemCount();
+    }
 }

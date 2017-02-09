@@ -22,13 +22,15 @@ class IPlugin {
 public:
     virtual ~IPlugin() {}
 
-    virtual void Init(WTL::CAppModule*) = 0;
-    virtual LPCWSTR GetName() = 0;
+    // return count of pages
+    virtual uint32_t Init(WTL::CAppModule*) = 0;
+    // return page name
+    virtual LPCWSTR GetName(uint32_t page) = 0;
     virtual bool Enable(IProcEdit*, void*) = 0;
     virtual void Disable() = 0;
-    virtual void Show() = 0;
-    virtual void Hide() = 0;
-    virtual void Tick() = 0;
+    virtual void Show(uint32_t page) = 0;
+    virtual void Hide(uint32_t page) = 0;
+    virtual void Tick(uint32_t page) = 0;
 };
 
 typedef IPlugin*(WINAPI* PLUGINLOADPROC)();

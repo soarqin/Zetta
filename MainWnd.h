@@ -15,8 +15,8 @@ public:
 
 private:
     BEGIN_MSG_MAP_EX(CCommonPanel)
-        COMMAND_RANGE_HANDLER(IDC_BYTESBASE, IDC_BYTESBASE + 500, OnBytes)
-        COMMAND_RANGE_HANDLER(IDC_EDITBASE, IDC_EDITBASE + 500, OnEdit)
+        COMMAND_RANGE_CODE_HANDLER(IDC_BYTESBASE, IDC_BYTESBASE + 500, BN_CLICKED, OnBytes)
+        COMMAND_RANGE_CODE_HANDLER(IDC_EDITBASE, IDC_EDITBASE + 500, EN_CHANGE, OnEdit)
     END_MSG_MAP()
 };
 
@@ -60,8 +60,8 @@ private:
     PatchSpec* spec_ = nullptr;
     CFont fnt_, fnt2_, fnt3_;
     int lastsel_ = -1;
-    std::vector<IPlugin*> plugins_;
-	std::vector<IPlugin*> pluginsEnabled_;
+    std::vector<std::pair<IPlugin*, uint32_t>> plugins_;
+	std::vector<std::pair<IPlugin*, uint32_t>> pluginsEnabled_;
 
     BEGIN_MSG_MAP_EX(CMainWnd)
         MSG_WM_CREATE(OnCreate)

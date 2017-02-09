@@ -6,12 +6,17 @@
 
 #include "skills.inl"
 
+#include <atlscrl.h>
+#include <set>
+
 #define IDC_CHARLIST 4001
+#define IDC_RELOAD 4002
+#define IDC_SAVE 4003
 #define IDC_CHAREDITBASE 4050
 
 struct UnitField {
 	const wchar_t* name;
-	uint8_t type; // 0-string 1-uint8 2-uint16 3-uint32 4-uint64 5-int8 6-int16 7-int32   (+8 - map of string)
+	uint8_t type; // 0-string 1-uint8 2-uint16 3-uint32 4-uint64 5-int8 6-int16 7-int32  +0x10 = padding
 	uint32_t offset;
 	uint8_t arraysize;
 	void* ptr;
@@ -88,7 +93,7 @@ UnitField unitfields[] = {
 	{ L"杖经验", 3, offsetof(UnitInfo, StaffExp), 1, nullptr, 17 },
 	{ L"杖等级", 1, offsetof(UnitInfo, StaffLevel), 1, nullptr, 17 },
 	{ L"杖适性", 1, offsetof(UnitInfo, StaffClass), 1, nullptr, 17 },
-	// 	{ L"技能ID", 10, offsetof(UnitInfo, skillID), 0x60, &skill_names },
+// 	{ L"技能ID", 10, offsetof(UnitInfo, skillID), 0x60, &skill_names },
 // 	{ L"等级", 1, offsetof(UnitInfo, skillLevel), 0x60, nullptr },
 // 	{ L"经验", 3, offsetof(UnitInfo, skillExp), 0x60, nullptr },
 	{ L"", 0xFF }
@@ -96,14 +101,25 @@ UnitField unitfields[] = {
 
 class CPluginPanel: public CWindowImpl<CPluginPanel, CStatic> {
 public:
-//    void OnHotkey(int id, UINT, UINT);
     LRESULT OnCharList(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
-    LRESULT OnEdit(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
+    LRESULT OnReload(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
+    LRESULT OnSave(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
 
 private:
     BEGIN_MSG_MAP_EX(CPluginPanel)
-        COMMAND_ID_HANDLER(IDC_CHARLIST, OnCharList)
-        COMMAND_RANGE_HANDLER(IDC_CHAREDITBASE, IDC_CHAREDITBASE + 150, OnEdit)
+        COMMAND_HANDLER(IDC_CHARLIST, LBN_SELCHANGE, OnCharList)
+        COMMAND_HANDLER(IDC_RELOAD, BN_CLICKED, OnReload)
+        COMMAND_HANDLER(IDC_SAVE, BN_CLICKED, OnSave)
+    END_MSG_MAP()
+};
+
+class CPluginPanel2 : public CWindowImpl<CPluginPanel2, CStatic> {
+public:
+    LRESULT OnEdit(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
+
+private:
+    BEGIN_MSG_MAP_EX(CPluginPanel2)
+        COMMAND_RANGE_CODE_HANDLER(IDC_CHAREDITBASE, IDC_CHAREDITBASE + 150, EN_CHANGE, OnEdit)
     END_MSG_MAP()
 };
 
@@ -113,12 +129,15 @@ public:
 
     }
 
-    virtual void Init(CAppModule* mod) override {
+    virtual uint32_t Init(CAppModule* mod) override {
         module_ = mod;
+        // return 2;
+        return 1;
     }
 
-    virtual LPCWSTR GetName() override {
-        return L"角色修改";
+    virtual LPCWSTR GetName(uint32_t page) override {
+        const wchar_t* names[2] = { L"角色修改", L"技能修改" };
+        return names[page];
     }
 
     virtual bool Enable(IProcEdit* proc, void* tc) override {
@@ -154,14 +173,23 @@ public:
         tabCtrl_.GetItemRect(0, trc);
         tabCtrl_.GetClientRect(rc);
         rc.DeflateRect(8, trc.Height() + 8, 8, 8);
-        panel_.Create(tabCtrl_.m_hWnd, rc, 0, WS_CHILD | WS_BORDER);
-        LoadChars();
-        charlist_.Create(panel_.m_hWnd, CRect(8, 8, 128, 8 + rc.Height()), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | LBS_NOTIFY, 0, IDC_CHARLIST);
+        panell_.Create(tabCtrl_.m_hWnd, CRect(rc.left, rc.top, rc.left + 140, rc.bottom), 0, WS_CHILD);
+        CRect src(rc.left + 140, rc.top, rc.right, rc.bottom);
+        spanel_[0].Create(tabCtrl_.m_hWnd, src, 0, WS_CHILD | WS_BORDER);
+        spanel_[1].Create(tabCtrl_.m_hWnd, src, 0, WS_CHILD | WS_BORDER);
+        spanel_[0].GetClientRect(src);
+        src.right -= 30;
+        panel_[0].Create(spanel_[0].m_hWnd, src, 0, WS_CHILD | WS_VISIBLE);
+        panel_[1].Create(spanel_[1].m_hWnd, src, 0, WS_CHILD | WS_VISIBLE);
+
+        charlist_.Create(panell_.m_hWnd, CRect(8, 0, 128, rc.Height() - 12), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | LBS_NOTIFY, 0, IDC_CHARLIST);
         charlist_.SetFont(fnt, false);
-        for (uint16_t i = 0; i < count_; ++i) {
-            int index = charlist_.AddString(units_[i].name);
-            charlist_.SetItemData(index, (DWORD_PTR)i);
-        }
+        CButton btn[2];
+        btn[0].Create(panell_.m_hWnd, CRect(8, rc.Height() - 22, 62, rc.Height()), L"刷新", WS_CHILD | WS_BORDER | WS_VISIBLE, 0, IDC_RELOAD);
+        btn[1].Create(panell_.m_hWnd, CRect(72, rc.Height() - 22, 128, rc.Height()), L"写入", WS_CHILD | WS_BORDER | WS_VISIBLE, 0, IDC_SAVE);
+        btn[0].SetFont(fnt, false);
+        btn[1].SetFont(fnt, false);
+        LoadChars();
 		uint32_t count = 0;
 		uint32_t position = 0;
 		uint32_t row = 0;
@@ -170,13 +198,15 @@ public:
 				position = 0; row = u->row;
 			}
 			if (!(u->type & 0x10)) {
-				editname_[count].Create(panel_.m_hWnd, CRect(143 + position, 6 + 23 * row, 198 + position, 25 + 23 * row), u->name, WS_CHILD | WS_VISIBLE | SS_RIGHT);
+				editname_[count].Create(spanel_[0].m_hWnd, CRect(3 + position, 4 + 23 * row, 58 + position, 22 + 23 * row), u->name, WS_CHILD | WS_VISIBLE | SS_RIGHT);
 				editname_[count].SetFont(fnt, false);
 			}
 			uint32_t width = 0;
-			switch (u->type & 0x07) {
+            UINT extraFlag = ES_NUMBER | ES_NOIME;
+            switch (u->type & 0x07) {
 			case 0:
 				width = 120;
+                extraFlag = 0;
 				break;
 			case 1:
 			case 5:
@@ -195,13 +225,21 @@ public:
 				break;
 			}
 			if (!(u->type & 0x10)) {
-				editbox_[count].Create(panel_.m_hWnd, CRect(200 + position, 5 + 23 * row, 200 + width + position, 26 + 23 * row), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_DISABLED);
+				editbox_[count].Create(panel_[0].m_hWnd, CRect(60 + position, 2 + 23 * row, 60 + width + position, 23 + 23 * row), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED | extraFlag, 0, IDC_CHAREDITBASE + count);
 				editbox_[count].SetFont(fnt, false);
+                editbox_[count].SetWindowLongPtr(GWLP_USERDATA, (LONG_PTR)u);
 			}
 			position += 60 + width;
 			++count;
 		}
-		/*
+        panel_[0].GetWindowRect(src);
+        src.bottom = 26 + 23 * row + src.top;
+        panel_[0].MoveWindow(src);
+        spanel_[0].SetClient(panel_[0]);
+        spanel_[1].SetClient(panel_[1]);
+        spanel_[0].ShowWindow(SW_HIDE);
+        spanel_[1].ShowWindow(SW_HIDE);
+        /*
         for (int i = 0; i < 5; ++i) {
             editbox_[i].Create(panel_.m_hWnd, CRect(150, 8 + 30 * i, 250, 27 + 30 * i), 0, WS_CHILD | WS_BORDER | WS_VISIBLE, 0, IDC_CHAREDITBASE + i);
             editbox_[i].SetFont(fnt);
@@ -211,37 +249,50 @@ public:
     }
 
     virtual void Disable() override {
-        if (panel_.IsWindow()) {
-            panel_.DestroyWindow();
+        if (panell_.IsWindow()) {
+            panell_.DestroyWindow();
         }
-        panel_.m_hWnd = (HWND)0;
+        panell_.m_hWnd = (HWND)0;
+        for (uint32_t i = 0; i < 2; ++i) {
+            if (spanel_[i].IsWindow()) {
+                spanel_[i].DestroyWindow();
+            }
+            spanel_[i].m_hWnd = (HWND)0;
+        }
         proc_ = nullptr;
         tabCtrl_ = (HWND)0;
         count_ = 0;
         units_.clear();
     }
 
-    virtual void Show() override {
-        panel_.ShowWindow(SW_SHOW);
+    virtual void Show(uint32_t page) override {
+        panell_.ShowWindow(SW_SHOW);
+        spanel_[page].ShowWindow(SW_SHOW);
     }
 
-    virtual void Hide() override {
-        panel_.ShowWindow(SW_HIDE);
+    virtual void Hide(uint32_t page) override {
+        panell_.ShowWindow(SW_HIDE);
+        spanel_[page].ShowWindow(SW_HIDE);
     }
 
-    virtual void Tick() override {
+    virtual void Tick(uint32_t page) override {
     }
 
     void OnSelChange() {
+        changing_ = true;
+        dirty_.clear();
         int n = charlist_.GetCurSel();
 		if (n < 0) {
 			uint32_t count = 0;
 			for (auto* u = unitfields; u->type != 0xFF; ++u) {
-				if (!(u->type & 0x10))
-					editbox_[count].EnableWindow(FALSE);
+                if (!(u->type & 0x10)) {
+                    editbox_[count].EnableWindow(FALSE);
+                    editbox_[count].Clear();
+                }
 				++count;
 			}
-			return;
+            changing_ = false;
+            return;
 		}
 		uint32_t count = 0;
 		wchar_t txt[128];
@@ -288,7 +339,8 @@ public:
 			}
 			++count;
 		}
-		/*
+        changing_ = false;
+        /*
         wchar_t txt[128];
         uint16_t idx = (uint16_t)charlist_.GetItemData(n);
         for (int i = 0; i < 5; ++i) {
@@ -308,24 +360,119 @@ public:
         */
     }
 
+    void OnReload() {
+        int n = charlist_.GetCurSel();
+        wchar_t name[256];
+        wchar_t newname[256];
+        charlist_.GetText(n, name);
+        LoadChars();
+        bool check_name = false;
+        int newsize = (int)units_.size();
+        if (n >= newsize) {
+            n = newsize - 1;
+            check_name = true;
+        } else {
+            charlist_.GetText(n, newname);
+            if (lstrcmp(newname, name) != 0)
+                check_name = true;
+        }
+        for (int i = 0; i < newsize; ++i) {
+            charlist_.GetText(n, newname);
+            if (lstrcmp(newname, name) != 0) {
+                n = i;
+                break;
+            }
+        }
+        charlist_.SetCurSel(n);
+        OnSelChange();
+    }
+
+    void OnSave() {
+        int sel = charlist_.GetCurSel();
+        if (sel < 0) return;
+        uint16_t idx = (uint16_t)charlist_.GetItemData(sel);
+        if (idx >= (uint16_t)units_.size()) return;
+        for (auto& n : dirty_) {
+            auto* uf = (UnitField*)editbox_[n].GetWindowLongPtr(GWLP_USERDATA);
+            if (!(uf->type & 0x10)) {
+                wchar_t name[256];
+                uint8_t* ptr = (uint8_t*)&units_[idx] + uf->offset;
+                switch (uf->type & 0x07) {
+                case 0:
+                    editbox_[n].GetWindowText(name, 256);
+                    lstrcpy((wchar_t*)ptr, name);
+                    break;
+                case 1:
+                    editbox_[n].GetWindowText(name, 256);
+                    *(uint8_t*)ptr = (uint8_t)wcstoul(name, nullptr, 10);
+                    break;
+                case 2:
+                    editbox_[n].GetWindowText(name, 256);
+                    *(uint16_t*)ptr = (uint16_t)wcstoul(name, nullptr, 10);
+                    break;
+                case 3:
+                    editbox_[n].GetWindowText(name, 256);
+                    *(uint32_t*)ptr = (uint32_t)wcstoul(name, nullptr, 10);
+                    break;
+                case 4:
+                    editbox_[n].GetWindowText(name, 256);
+                    *(uint64_t*)ptr = (uint64_t)wcstoull(name, nullptr, 10);
+                    break;
+                case 5:
+                    editbox_[n].GetWindowText(name, 256);
+                    *(int8_t*)ptr = (int8_t)wcstol(name, nullptr, 10);
+                    break;
+                case 6:
+                    editbox_[n].GetWindowText(name, 256);
+                    *(int16_t*)ptr = (int16_t)wcstol(name, nullptr, 10);
+                    break;
+                case 7:
+                    editbox_[n].GetWindowText(name, 256);
+                    *(int32_t*)ptr = (int32_t)wcstol(name, nullptr, 10);
+                    break;
+                }
+            }
+        }
+        dirty_.clear();
+        proc_->Write(true, 0x1E98 + sizeof(UnitInfo) * idx, &units_[idx], sizeof(UnitInfo));
+    }
+
+    void OnChanged(uint32_t n) {
+        if (changing_) return;
+        if (n >= (uint32_t)units_.size())
+            return;
+        dirty_.insert(n);
+    }
+
 private:
     void LoadChars() {
         proc_->Read(true, 0x45B10, &count_, 2);
         units_.resize(count_);
         if (count_ == 0) return;
         proc_->Read(true, 0x1E98, &units_[0], sizeof(UnitInfo) * count_);
+        int n = charlist_.GetCount();
+        while (--n >= 0)
+            charlist_.DeleteString(n);
+        for (uint16_t i = 0; i < count_; ++i) {
+            int index = charlist_.AddString(units_[i].name);
+            charlist_.SetItemData(index, (DWORD_PTR)i);
+        }
     }
 
 private:
     CAppModule* module_ = nullptr;
     IProcEdit* proc_ = nullptr;
     CTabCtrl tabCtrl_;
-    CPluginPanel panel_;
+    CPluginPanel panell_;
+    CScrollContainer spanel_[2];
+    CPluginPanel2 panel_[2];
     CListBox charlist_;
 	CStatic editname_[100];
     CEdit editbox_[100];
     uint16_t count_ = 0;
     std::vector<UnitInfo> units_;
+    std::set<uint32_t> dirty_;
+    bool changing_ = false;
     uintptr_t enemyStartOff_ = 0;
     uintptr_t enemyCountOff_ = 0;
     uintptr_t currentUnitOff_ = 0;
@@ -336,15 +483,22 @@ private:
 static PluginDisgaea1 gPlugin;
 
 LRESULT CPluginPanel::OnCharList(WORD notifyCode, WORD id, HWND hwnd, BOOL & bHandled) {
-    switch (notifyCode) {
-    case LBN_SELCHANGE:
-        gPlugin.OnSelChange();
-        break;
-    }
+    gPlugin.OnSelChange();
     return 0;
 }
 
-LRESULT CPluginPanel::OnEdit(WORD notifyCode, WORD id, HWND hwnd, BOOL & bHandled) {
+LRESULT CPluginPanel::OnReload(WORD notifyCode, WORD id, HWND hwnd, BOOL & bHandled) {
+    gPlugin.OnReload();
+    return 0;
+}
+
+LRESULT CPluginPanel::OnSave(WORD notifyCode, WORD id, HWND hwnd, BOOL & bHandled) {
+    gPlugin.OnSave();
+    return 0;
+}
+
+LRESULT CPluginPanel2::OnEdit(WORD notifyCode, WORD id, HWND hwnd, BOOL & bHandled) {
+    gPlugin.OnChanged(id - IDC_CHAREDITBASE);
     return 0;
 }
 
