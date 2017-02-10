@@ -116,17 +116,7 @@ LRESULT CMainWnd::OnCreate(LPCREATESTRUCT) {
     // center the dialog on the screen
     CenterWindow();
 
-    TCHAR path[256];
-    TCHAR ver[256];
-    GetModuleFileName(NULL, path, 256);
-    GetFileVersion(path, ver);
-    {
-        TCHAR title[256];
-        GetWindowText(title, 256);
-        lstrcat(title, _T(" v"));
-        lstrcat(title, ver);
-        SetWindowText(title);
-    }
+    UpdateTitle();
 
     fnt_.CreatePointFont(90, _T("SimSun"));
     fnt2_.CreatePointFont(150, _T("SimSun"), 0, true);
@@ -408,15 +398,18 @@ bool CMainWnd::CheckProcess() {
     }
     if (!ver) {
         if (r < 0) BuildForm();
+        UpdateTitle();
         return false;
     }
     auto ite = ver->find(gProcEdit.GetVersion());
     if (ite == ver->end()) {
         if (!labels_.empty())
             SetWindowTextA(labels_.back()->m_hWnd, ("Unsupported version: " + gProcEdit.GetVersion()).c_str());
+        UpdateTitle();
         return false;
     }
     spec_ = &ite->second;
+    UpdateTitle();
     gProcEdit.UpdateAddr(spec_->memAddr);
 #ifdef _DEBUG
     gProcEdit.DumpMemory();
@@ -448,4 +441,17 @@ void CMainWnd::UnloadPlugins() {
         tabctrl_.DeleteItem(count - 1);
         count = tabctrl_.GetItemCount();
     }
+}
+
+void CMainWnd::UpdateTitle() {
+    TCHAR path[256];
+    TCHAR ver[256];
+    GetModuleFileName(NULL, path, 256);
+    GetFileVersion(path, ver);
+    TCHAR title[256];
+    if (spec_ == nullptr)
+        wsprintf(title, L"Zetta! v%s", ver);
+    else
+        wsprintf(title, L"Zetta! v%s - %s", ver, spec_->name.c_str());
+    SetWindowText(title);
 }

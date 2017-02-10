@@ -2,7 +2,7 @@
 
 #include "IPlugin.h"
 
-#include "Unit.h"
+#include "../Disgaea2/Unit.h"
 
 #include "skills.inl"
 
@@ -112,9 +112,9 @@ private:
     END_MSG_MAP()
 };
 
-class PluginDisgaea1: public IPlugin {
+class PluginDisgaea2E: public IPlugin {
 public:
-    virtual ~PluginDisgaea1() override {
+    virtual ~PluginDisgaea2E() override {
 
     }
 
@@ -448,7 +448,7 @@ private:
     bool changing_ = false;
 };
 
-static PluginDisgaea1 gPlugin;
+static PluginDisgaea2E gPlugin;
 
 LRESULT CPluginPanel::OnCharList(WORD notifyCode, WORD id, HWND hwnd, BOOL & bHandled) {
     gPlugin.OnSelChange();

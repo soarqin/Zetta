@@ -123,9 +123,9 @@ private:
     END_MSG_MAP()
 };
 
-class PluginDisgaea1: public IPlugin {
+class PluginDisgaea1E: public IPlugin {
 public:
-    virtual ~PluginDisgaea1() override {
+    virtual ~PluginDisgaea1E() override {
 
     }
 
@@ -142,30 +142,6 @@ public:
 
     virtual bool Enable(IProcEdit* proc, void* tc) override {
         if (proc->ClassName() != "DISGAEA") return false;
-        if (proc->GetVersion() == "1.0.0.3") {
-            enemyCountOff_ = 0x9F57A;
-            enemyStartOff_ = 0x1204F4;
-            currentUnitOff_ = 0x1AA46C;
-            congressOff_ = 0x12066A;
-        } else if (proc->GetVersion() == "1.0.0.5") {
-            enemyCountOff_ = 0x9F57E;
-			switch (proc->GetCRC()) {
-			case 0x4E7169ADu: /* U12 */
-			case 0xCDC33CBBu: /* U13 */
-				enemyStartOff_ = 0x120864;
-                congressOff_ = 0x1209DA;
-				break;
-			case 0xD8AE5E17u: /* U14 */
-				enemyStartOff_ = 0x120994;
-                congressOff_ = 0x120B0A;
-				break;
-			default:
-				enemyStartOff_ = 0;
-                congressOff_ = 0;
-				break;
-			}
-			currentUnitOff_ = 0x1AE474;
-        } else return false;
         proc_ = proc;
         tabCtrl_ = (HWND)tc;
         CFontHandle fnt;
@@ -472,14 +448,9 @@ private:
     std::vector<UnitInfo> units_;
     std::set<uint32_t> dirty_;
     bool changing_ = false;
-    uintptr_t enemyStartOff_ = 0;
-    uintptr_t enemyCountOff_ = 0;
-    uintptr_t currentUnitOff_ = 0;
-    uintptr_t currentUnit_ = 0;
-    uintptr_t congressOff_ = 0;
 };
 
-static PluginDisgaea1 gPlugin;
+static PluginDisgaea1E gPlugin;
 
 LRESULT CPluginPanel::OnCharList(WORD notifyCode, WORD id, HWND hwnd, BOOL & bHandled) {
     gPlugin.OnSelChange();

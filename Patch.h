@@ -47,6 +47,7 @@ struct PatchBlock {
 };
 
 struct PatchSpec {
+    std::wstring name;
     uintptr_t memAddr;
     std::vector<PatchBlock> blocks;
 };

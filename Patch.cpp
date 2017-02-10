@@ -46,6 +46,10 @@ void Patch::Load(const char* filename) {
         size_t sz = 0;
         for (auto m1 = vnode.MemberBegin(); m1 != vnode.MemberEnd(); ++m1) {
             auto& spec = ver[m1->name.GetString()];
+            const char* nm = m1->value["Name"].GetString();
+            wchar_t wnm[256];
+            MultiByteToWideChar(CP_UTF8, 0, nm, -1, wnm, 256);
+            spec.name = wnm;
             spec.memAddr = (uintptr_t)ParseUInt64(m1->value["MemAddr"].GetString());
             auto mnode = m1->value["Offset"].GetObject();
             for (auto m2 = mnode.MemberBegin(); m2 != mnode.MemberEnd(); ++m2) {

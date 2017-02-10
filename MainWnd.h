@@ -49,6 +49,7 @@ private:
     bool CheckProcess();
     void LoadPlugins();
     void UnloadPlugins();
+    void UpdateTitle();
 
 private:
     std::vector<CCommonPanel*> cpanels_;
