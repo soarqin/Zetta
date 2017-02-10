@@ -67,15 +67,15 @@ UnitField unitfields[] = {
 	{ L"剑经验", 3, offsetof(UnitInfo, SwordExp), 1, nullptr, 12 },
 	{ L"剑等级", 1, offsetof(UnitInfo, SwordLevel), 1, nullptr, 12 },
 	{ L"剑适性", 1, offsetof(UnitInfo, SwordClass), 1, nullptr, 12 },
-	{ L"枪经验", 3, offsetof(UnitInfo, SpearExp), 1, nullptr, 13 },
-	{ L"枪等级", 1, offsetof(UnitInfo, SpearLevel), 1, nullptr, 13 },
-	{ L"枪适性", 1, offsetof(UnitInfo, SpearClass), 1, nullptr, 13 },
+	{ L"矛经验", 3, offsetof(UnitInfo, SpearExp), 1, nullptr, 13 },
+	{ L"矛等级", 1, offsetof(UnitInfo, SpearLevel), 1, nullptr, 13 },
+	{ L"矛适性", 1, offsetof(UnitInfo, SpearClass), 1, nullptr, 13 },
 	{ L"弓经验", 3, offsetof(UnitInfo, BowExp), 1, nullptr, 14 },
 	{ L"弓等级", 1, offsetof(UnitInfo, BowLevel), 1, nullptr, 14 },
 	{ L"弓适性", 1, offsetof(UnitInfo, BowClass), 1, nullptr, 14 },
-	{ L"铳经验", 3, offsetof(UnitInfo, GunExp), 1, nullptr, 15 },
-	{ L"铳等级", 1, offsetof(UnitInfo, GunLevel), 1, nullptr, 15 },
-	{ L"铳适性", 1, offsetof(UnitInfo, GunClass), 1, nullptr, 15 },
+	{ L"枪经验", 3, offsetof(UnitInfo, GunExp), 1, nullptr, 15 },
+	{ L"枪等级", 1, offsetof(UnitInfo, GunLevel), 1, nullptr, 15 },
+	{ L"枪适性", 1, offsetof(UnitInfo, GunClass), 1, nullptr, 15 },
 	{ L"斧经验", 3, offsetof(UnitInfo, AxeExp), 1, nullptr, 16 },
 	{ L"斧等级", 1, offsetof(UnitInfo, AxeLevel), 1, nullptr, 16 },
 	{ L"斧适性", 1, offsetof(UnitInfo, AxeClass), 1, nullptr, 16 },
@@ -400,7 +400,7 @@ public:
             }
         }
         dirty_.clear();
-        proc_->Write(true, 0x1E98 + sizeof(UnitInfo) * idx, &units_[idx], sizeof(UnitInfo));
+        proc_->Write(true, 0x7738 + sizeof(UnitInfo) * idx, &units_[idx], sizeof(UnitInfo));
     }
 
     void OnChanged(uint32_t n) {
