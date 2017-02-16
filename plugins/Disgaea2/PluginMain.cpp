@@ -139,7 +139,7 @@ public:
     bool OnF3() {
         uint32_t off;
         proc_->Read(false, currentUnitOff_, &off, 4);
-        proc_->Read(false, unitStartOff_ + off * 0x388, &off, 4);
+        proc_->Read(false, unitStartOff_ + 8 + off * 0x388, &off, 4);
         if (off < 0x200000) return false;
         UnitInfo u;
         proc_->ReadRaw(off, &u, sizeof(UnitInfo));
@@ -151,7 +151,7 @@ public:
     bool OnF5() {
         uint32_t off;
         proc_->Read(false, currentUnitOff_, &off, 4);
-        proc_->Read(false, unitStartOff_ + off * 0x388, &off, 4);
+        proc_->Read(false, unitStartOff_ + 8 + off * 0x388, &off, 4);
         if (off < 0x200000) return false;
         uint32_t hp = 0;
         proc_->WriteRaw(off + offsetof(UnitInfo, HP), &hp, 4);
@@ -161,7 +161,7 @@ public:
     bool OnF6() {
         uint32_t off;
         proc_->Read(false, currentUnitOff_, &off, 4);
-        proc_->Read(false, unitStartOff_ + off * 0x388, &off, 4);
+        proc_->Read(false, unitStartOff_ + 8 + off * 0x388, &off, 4);
         if (off < 0x200000) return false;
         uint32_t hp = 1;
         proc_->WriteRaw(off + offsetof(UnitInfo, HP), &hp, 4);
