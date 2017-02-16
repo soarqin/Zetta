@@ -10,7 +10,7 @@ struct UnitInfo {
 	uint16_t sres[5];     // +0x6DA
 	uint8_t unk2[0x72];   // +0x74C
 	uint32_t skillExp[0x70]; // +0x90C
-	uint16_t skillId[0x70]; // +0x9EC
+	uint16_t skillID[0x70]; // +0x9EC
 	uint8_t skillLevel[0x70]; // +0xA5C
 	uint16_t skillIndex[0x70]; // +0xB3C
 	uint16_t skillId2[0x70]; // +0xC1C

@@ -12,7 +12,12 @@
 #define IDC_CHARLIST 4001
 #define IDC_RELOAD 4002
 #define IDC_SAVE 4003
+#define IDC_BTNSADD 4010
+#define IDC_BTNSDEL 4011
 #define IDC_CHAREDITBASE 4050
+#define IDC_COMBOSIDBASE 4150
+#define IDC_EDITSLVLBASE 4250
+#define IDC_EDITSEXPBASE 4350
 
 struct UnitField {
 	const wchar_t* name;
@@ -105,10 +110,18 @@ private:
 class CPluginPanel2 : public CWindowImpl<CPluginPanel2, CStatic> {
 public:
     LRESULT OnEdit(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
+    LRESULT OnSkillChange(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
+    LRESULT OnBtnSAdd(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
+    LRESULT OnBtnSDel(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
 
 private:
     BEGIN_MSG_MAP_EX(CPluginPanel2)
-        COMMAND_RANGE_CODE_HANDLER(IDC_CHAREDITBASE, IDC_CHAREDITBASE + 150, EN_CHANGE, OnEdit)
+        COMMAND_RANGE_CODE_HANDLER(IDC_CHAREDITBASE, IDC_CHAREDITBASE + 100, EN_CHANGE, OnEdit)
+        COMMAND_RANGE_CODE_HANDLER(IDC_COMBOSIDBASE, IDC_COMBOSIDBASE + 0x60, CBN_SELCHANGE, OnSkillChange)
+        COMMAND_RANGE_CODE_HANDLER(IDC_EDITSLVLBASE, IDC_EDITSLVLBASE + 0x60, EN_CHANGE, OnSkillChange)
+        COMMAND_RANGE_CODE_HANDLER(IDC_EDITSEXPBASE, IDC_EDITSEXPBASE + 0x60, EN_CHANGE, OnSkillChange)
+        COMMAND_HANDLER(IDC_BTNSADD, BN_CLICKED, OnBtnSAdd)
+        COMMAND_HANDLER(IDC_BTNSDEL, BN_CLICKED, OnBtnSDel)
     END_MSG_MAP()
 };
 
@@ -120,8 +133,7 @@ public:
 
     virtual uint32_t Init(CAppModule* mod) override {
         module_ = mod;
-        // return 2;
-        return 1;
+        return 2;
     }
 
     virtual LPCWSTR GetName(uint32_t page) override {
@@ -131,6 +143,10 @@ public:
 
     virtual bool Enable(IProcEdit* proc, void* tc) override {
         if (proc->ClassName() != "Disgaea2 PC") return false;
+        if (proc->GetVersion() == "1.0.0.1") {
+            selfStartOff_ = 0x2A0738;
+            selfCountOff_ = 0x34D974;
+        } else return false;
         proc_ = proc;
         tabCtrl_ = (HWND)tc;
         CFontHandle fnt;
@@ -145,8 +161,8 @@ public:
         spanel_[1].Create(tabCtrl_.m_hWnd, src, 0, WS_CHILD | WS_BORDER);
         spanel_[0].GetClientRect(src);
         src.right -= 30;
-        panel_[0].Create(spanel_[0].m_hWnd, src, 0, WS_CHILD | WS_VISIBLE);
-        panel_[1].Create(spanel_[1].m_hWnd, src, 0, WS_CHILD | WS_VISIBLE);
+        panel_[0].Create(spanel_[0].m_hWnd, CRect(0, 0, 10, 10), 0, WS_CHILD | WS_VISIBLE);
+        panel_[1].Create(spanel_[1].m_hWnd, CRect(0, 0, 10, 10), 0, WS_CHILD | WS_VISIBLE);
 
         charlist_.Create(panell_.m_hWnd, CRect(8, 0, 128, rc.Height() - 12), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | LBS_NOTIFY, 0, IDC_CHARLIST);
         charlist_.SetFont(fnt, false);
@@ -199,8 +215,40 @@ public:
 			++count;
 		}
         panel_[0].GetWindowRect(src);
+        panel_[0].ScreenToClient(src);
         src.bottom = 26 + 23 * row + src.top;
         panel_[0].MoveWindow(src);
+        btnsadd_.Create(panel_[1].m_hWnd, CRect(0, 0, 22, 22), L"+", WS_CHILD | WS_BORDER | BS_PUSHLIKE, 0, IDC_BTNSADD);
+        btnsdel_.Create(panel_[1].m_hWnd, CRect(0, 0, 22, 22), L"-", WS_CHILD | WS_BORDER | BS_PUSHLIKE, 0, IDC_BTNSDEL);
+        btnsadd_.SetFont(fnt, false);
+        btnsdel_.SetFont(fnt, false);
+        CStatic txt1, txt2, txt3;
+        txt1.Create(panel_[1].m_hWnd, CRect(28, 8, 100, 30), L"技能", WS_CHILD | WS_VISIBLE);
+        txt2.Create(panel_[1].m_hWnd, CRect(128, 8, 160, 30), L"等级", WS_CHILD | WS_VISIBLE);
+        txt3.Create(panel_[1].m_hWnd, CRect(188, 8, 250, 30), L"经验", WS_CHILD | WS_VISIBLE);
+        txt1.SetFont(fnt, false);
+        txt2.SetFont(fnt, false);
+        txt3.SetFont(fnt, false);
+        for (uint32_t i = 0; i < 0x60; ++i) {
+            combosid_[i].Create(panel_[1].m_hWnd, CRect(8, 32 + i * 25, 100, 254 + i * 25), 0, WS_CHILD | CBS_DROPDOWNLIST | CBS_DROPDOWNLIST | WS_VSCROLL | WS_BORDER, 0, IDC_COMBOSIDBASE + i);
+            int index = combosid_[i].AddString(L"- 无 -");
+            if (i == 0) {
+                skillMap_[0] = 0;
+                skillMap2_[0] = 0;
+            }
+            for (auto& p : skill_names) {
+                index = combosid_[i].AddString(p.second);
+                if (i == 0) {
+                    skillMap_[index] = p.first;
+                    skillMap2_[p.first] = index;
+                }
+            }
+            editslvl_[i].Create(panel_[1].m_hWnd, CRect(108, 32 + i * 25, 160, 54 + i * 25), 0, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | ES_NUMBER | ES_NOIME, 0, IDC_EDITSLVLBASE + i);
+            editsexp_[i].Create(panel_[1].m_hWnd, CRect(168, 32 + i * 25, 250, 54 + i * 25), 0, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | ES_NUMBER | ES_NOIME, 0, IDC_EDITSEXPBASE + i);
+            combosid_[i].SetFont(fnt, false);
+            editslvl_[i].SetFont(fnt, false);
+            editsexp_[i].SetFont(fnt, false);
+        }
         spanel_[0].SetClient(panel_[0]);
         spanel_[1].SetClient(panel_[1]);
         spanel_[0].ShowWindow(SW_HIDE);
@@ -224,6 +272,19 @@ public:
                 spanel_[i].DestroyWindow();
             }
             spanel_[i].m_hWnd = (HWND)0;
+            panel_[i].m_hWnd = (HWND)0;
+        }
+        charlist_.m_hWnd = (HWND)0;
+        btnsadd_.m_hWnd = (HWND)0;
+        btnsdel_.m_hWnd = (HWND)0;
+        for (int i = 0; i < 100; ++i) {
+            editname_[i].m_hWnd = (HWND)0;
+            editbox_[i].m_hWnd = (HWND)0;
+        }
+        for (int i = 0; i < 0x60; ++i) {
+            combosid_[i].m_hWnd = (HWND)0;
+            editslvl_[i].m_hWnd = (HWND)0;
+            editsexp_[i].m_hWnd = (HWND)0;
         }
         proc_ = nullptr;
         tabCtrl_ = (HWND)0;
@@ -248,7 +309,14 @@ public:
         changing_ = true;
         dirty_.clear();
         int n = charlist_.GetCurSel();
-		if (n < 0) {
+        uint16_t idx = 0;
+        if (n >= 0) {
+            idx = (uint16_t)charlist_.GetItemData(n);
+            if (idx >= (uint16_t)units_.size()) {
+                n = -1;
+            }
+        }
+        if (n < 0) {
 			uint32_t count = 0;
 			for (auto* u = unitfields; u->type != 0xFF; ++u) {
                 if (!(u->type & 0x10)) {
@@ -257,15 +325,23 @@ public:
                 }
 				++count;
 			}
+            for (uint32_t i = 0; i < 0x60; ++i) {
+                combosid_[i].ShowWindow(SW_HIDE);
+                editslvl_[i].ShowWindow(SW_HIDE);
+                editsexp_[i].ShowWindow(SW_HIDE);
+            }
+            btnsadd_.ShowWindow(SW_HIDE);
+            btnsdel_.ShowWindow(SW_HIDE);
             changing_ = false;
             return;
 		}
 		uint32_t count = 0;
 		wchar_t txt[128];
-		for (auto* u = unitfields; u->type != 0xFF; ++u) {
+        auto &unit = units_[idx];
+        for (auto* u = unitfields; u->type != 0xFF; ++u) {
 			if (!(u->type & 0x10)) {
 				editbox_[count].EnableWindow(TRUE);
-				uint8_t* ptr = (uint8_t*)&units_[n] + u->offset;
+				uint8_t* ptr = (uint8_t*)&unit + u->offset;
 				switch (u->type & 0x07) {
 				case 0: {
 					wchar_t name[256];
@@ -305,25 +381,8 @@ public:
 			}
 			++count;
 		}
+        RefreshSkillUI(unit);
         changing_ = false;
-        /*
-        wchar_t txt[128];
-        uint16_t idx = (uint16_t)charlist_.GetItemData(n);
-        for (int i = 0; i < 5; ++i) {
-            auto ite = skill_names.find(units_[idx].skillID[i]);
-            if (ite == skill_names.end()) {
-                wsprintf(txt, L"%u", units_[idx].skillID[i]);
-                editbox_[i].SetWindowText(txt);
-            } else {
-                editbox_[i].SetWindowText(ite->second);
-            }
-        }
-		*/
-        /*
-        wchar_t name[32];
-        charlist_.GetText(n, name);
-        MessageBox(NULL, name, NULL, 0);
-        */
     }
 
     void OnReload() {
@@ -400,7 +459,7 @@ public:
             }
         }
         dirty_.clear();
-        proc_->Write(true, 0x7738 + sizeof(UnitInfo) * idx, &units_[idx], sizeof(UnitInfo));
+        proc_->Write(false, selfStartOff_ + sizeof(UnitInfo) * idx, &units_[idx], sizeof(UnitInfo));
     }
 
     void OnChanged(uint32_t n) {
@@ -408,12 +467,72 @@ public:
         dirty_.insert(n);
     }
 
+    void OnSkillChanged(int type, int n) {
+        if (changing_ || n >= 0x60) return;
+        int sel = charlist_.GetCurSel();
+        if (sel < 0) return;
+        uint16_t idx = (uint16_t)charlist_.GetItemData(sel);
+        if (idx >= (uint16_t)units_.size()) return;
+        auto& unit = units_[idx];
+        switch (type) {
+        case 0: {
+            int ssel = combosid_[n].GetCurSel();
+            auto ite = skillMap_.find(ssel);
+            if (ite == skillMap_.end()) unit.skillID[n] = 0;
+            unit.skillID[n] = ite->second;
+            break;
+        }
+        case 1: {
+            wchar_t txt[128];
+            editslvl_[n].GetWindowText(txt, 128);
+            unit.skillExp[n] = (uint32_t)wcstoul(txt, 0, 10);
+            break;
+        }
+        case 2: {
+            wchar_t txt[128];
+            editsexp_[n].GetWindowText(txt, 128);
+            unit.skillExp[n] = (uint8_t)wcstoul(txt, 0, 10);
+            break;
+        }
+        }
+    }
+
+    void OnSkillAdd() {
+        int sel = charlist_.GetCurSel();
+        if (sel < 0) return;
+        uint16_t idx = (uint16_t)charlist_.GetItemData(sel);
+        if (idx >= (uint16_t)units_.size()) return;
+        auto& unit = units_[idx];
+        if (unit.skillCount >= 0x60) return;
+        changing_ = true;
+        unit.skillID[unit.skillCount] = 0;
+        unit.skillLevel[unit.skillCount] = 0;
+        unit.skillExp[unit.skillCount] = 0;
+        ++unit.skillCount;
+        RefreshSkillUI(unit, unit.skillCount - 1, unit.skillCount);
+        changing_ = false;
+    }
+
+    void OnSkillDel() {
+        if (changing_) return;
+        int sel = charlist_.GetCurSel();
+        if (sel < 0) return;
+        uint16_t idx = (uint16_t)charlist_.GetItemData(sel);
+        if (idx >= (uint16_t)units_.size()) return;
+        auto& unit = units_[idx];
+        if (unit.skillCount == 0) return;
+        changing_ = true;
+        --unit.skillCount;
+        RefreshSkillUI(unit, unit.skillCount, unit.skillCount + 1);
+        changing_ = false;
+    }
+
 private:
     void LoadChars() {
-        proc_->Read(true, 0xB4974, &count_, 2);
+        proc_->Read(false, selfCountOff_, &count_, 2);
         units_.resize(count_);
         if (count_ == 0) return;
-        proc_->Read(true, 0x7738, &units_[0], sizeof(UnitInfo) * count_);
+        proc_->Read(false, selfStartOff_, &units_[0], sizeof(UnitInfo) * count_);
         int n = charlist_.GetCount();
         while (--n >= 0)
             charlist_.DeleteString(n);
@@ -425,6 +544,50 @@ private:
         }
     }
 
+    void RefreshSkillUI(UnitInfo& unit, int start = -1, int end = -1) {
+        if (start < 0) start = 0;
+        if (end < 0) end = 0x60;
+        for (int i = start; i < unit.skillCount && i < end; ++i) {
+            combosid_[i].ShowWindow(SW_SHOW);
+            auto ite = skillMap2_.find(unit.skillID[i]);
+            if (ite == skillMap2_.end())
+                combosid_[i].SetCurSel(0);
+            else
+                combosid_[i].SetCurSel(ite->second);
+            editslvl_[i].ShowWindow(SW_SHOW);
+            wchar_t txt[128];
+            wsprintf(txt, L"%d", unit.skillLevel[i]);
+            editslvl_[i].SetWindowText(txt);
+            editsexp_[i].ShowWindow(SW_SHOW);
+            wsprintf(txt, L"%d", unit.skillExp[i]);
+            editsexp_[i].SetWindowText(txt);
+        }
+        if (unit.skillCount < 0x60) {
+            btnsadd_.ShowWindow(SW_SHOW);
+            btnsadd_.MoveWindow(CRect(8, 32 + unit.skillCount * 25, 30, 54 + unit.skillCount * 25));
+        } else
+            btnsadd_.ShowWindow(SW_HIDE);
+        if (unit.skillCount > 0) {
+            btnsdel_.ShowWindow(SW_SHOW);
+            btnsdel_.MoveWindow(CRect(258, 32 + (unit.skillCount - 1) * 25, 280, 54 + (unit.skillCount - 1) * 25));
+        } else
+            btnsdel_.ShowWindow(SW_HIDE);
+        for (int i = unit.skillCount; i < end; ++i) {
+            combosid_[i].ShowWindow(SW_HIDE);
+            editslvl_[i].ShowWindow(SW_HIDE);
+            editsexp_[i].ShowWindow(SW_HIDE);
+        }
+        if (end >= unit.skillCount) {
+            CRect rc;
+            panel_[1].GetWindowRect(rc);
+            spanel_[1].ScreenToClient(rc);
+            rc.right = rc.left + 288;
+            rc.bottom = rc.top + 62 + (unit.skillCount < 0x60 ? unit.skillCount : unit.skillCount - 1) * 25;
+            panel_[1].MoveWindow(rc, FALSE);
+            spanel_[1].SetScrollSize(rc.Width(), rc.Height(), TRUE, false);
+        }
+    }
+
 	void ConvUTF8(const uint8_t* str, wchar_t* out) {
 		MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)str, -1, out, 256);
 	}
@@ -433,6 +596,9 @@ private:
 	}
 
 private:
+    uintptr_t selfStartOff_ = 0;
+    uintptr_t selfCountOff_ = 0;
+
     CAppModule* module_ = nullptr;
     IProcEdit* proc_ = nullptr;
     CTabCtrl tabCtrl_;
@@ -442,10 +608,16 @@ private:
     CListBox charlist_;
 	CStatic editname_[100];
     CEdit editbox_[100];
+    CComboBox combosid_[0x60];
+    CEdit editslvl_[0x60];
+    CEdit editsexp_[0x60];
+    CButton btnsadd_, btnsdel_;
     uint16_t count_ = 0;
     std::vector<UnitInfo> units_;
     std::set<uint32_t> dirty_;
     bool changing_ = false;
+    std::map<int, uint16_t> skillMap_;
+    std::map<uint16_t, int> skillMap2_;
 };
 
 static PluginDisgaea2E gPlugin;
@@ -467,6 +639,26 @@ LRESULT CPluginPanel::OnSave(WORD notifyCode, WORD id, HWND hwnd, BOOL & bHandle
 
 LRESULT CPluginPanel2::OnEdit(WORD notifyCode, WORD id, HWND hwnd, BOOL & bHandled) {
     gPlugin.OnChanged(id - IDC_CHAREDITBASE);
+    return 0;
+}
+
+LRESULT CPluginPanel2::OnSkillChange(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled) {
+    if (id >= IDC_COMBOSIDBASE && id < IDC_COMBOSIDBASE + 0x60)
+        gPlugin.OnSkillChanged(0, id - IDC_COMBOSIDBASE);
+    if (id >= IDC_EDITSLVLBASE && id < IDC_EDITSLVLBASE + 0x60)
+        gPlugin.OnSkillChanged(1, id - IDC_EDITSLVLBASE);
+    if (id >= IDC_EDITSEXPBASE && id < IDC_EDITSEXPBASE + 0x60)
+        gPlugin.OnSkillChanged(2, id - IDC_EDITSEXPBASE);
+    return 0;
+}
+
+LRESULT CPluginPanel2::OnBtnSAdd(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled) {
+    gPlugin.OnSkillAdd();
+    return 0;
+}
+
+LRESULT CPluginPanel2::OnBtnSDel(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled) {
+    gPlugin.OnSkillDel();
     return 0;
 }
 

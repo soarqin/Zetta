@@ -42,12 +42,12 @@ public:
     virtual bool Enable(IProcEdit* proc, void* tc) override {
         if (proc->ClassName() != "Disgaea2 PC") return false;
         if (proc->GetVersion() == "1.0.0.1") {
-            enemyCountOff_ = 0x242612;
-            enemyStartOff_ = 0x362628;
-            currentUnitOff_ = 0x3C1D80;
-            currentUnit_ = 0xC6628;
-            congressOff_ = 0xC6938;
-            congressCountOff_ = 0x3CE8F4;
+            selfStartOff_ = 0x2A0738;
+            selfCountOff_ = 0x34D974;
+            unitStartOff_ = 0x35F620;
+            currentUnitOff_ = 0x65AD80;
+            congressOff_ = 0x35F938;
+            congressCountOff_ = 0x6678F4;
         } else return false;
         proc_ = proc;
         tabCtrl_ = (HWND)tc;
@@ -99,65 +99,47 @@ public:
     }
 
     virtual void Tick(uint32_t page) override {
-        /*
-        uint16_t count;
-        proc_->Read(true, 0x45B10, &count, 2);
-        if (count != count_) {
-            count_ = count;
-            units_.resize(count);
-            if (count > 0)
-                proc_->Read(true, 0x1E98, &units_[0], sizeof(UnitInfo) * count);
-        }
-        uint32_t off;
-        proc_->Read(false, currentUnitOff_, &off, 4);
-        off += 12;
-        proc_->ReadRaw(off, &off, 4);
-        if (off != currentUnit_ && off >= 0x200000) {
-            currentUnit_ = off;
-            UnitInfo u;
-            proc_->ReadRaw(off, &u, sizeof(UnitInfo));
-        }
-        proc_->Read(true, enemyStartOff_, &off, 4);
-        if (off > 0) {
-            proc_->Read(true, enemyCountOff_, &count, 2);
-            std::vector<UnitInfo> enemies_;
-            enemies_.resize(count);
-            if (count > 0)
-                proc_->ReadRaw(off, &enemies_[0], sizeof(UnitInfo) * count);
-        }
-        */
     }
 
     bool OnF1() {
         uint16_t count;
-        proc_->Read(true, 0xB4974, &count, 2);
+        proc_->Read(false, selfCountOff_, &count, 2);
         if (count == 0) return false;
         units_.resize(count);
-        proc_->Read(true, 0x7738, &units_[0], sizeof(UnitInfo) * count);
+        proc_->Read(false, selfStartOff_, &units_[0], sizeof(UnitInfo) * count);
         for (uint16_t i = 0; i < count; ++i) {
-            proc_->Write(true, 0x7738 + sizeof(UnitInfo) * i + offsetof(UnitInfo, HP), &units_[i].HPMax, 4);
-            proc_->Write(true, 0x7738 + sizeof(UnitInfo) * i + offsetof(UnitInfo, SP), &units_[i].SPMax, 4);
+            proc_->Write(false, selfStartOff_ + sizeof(UnitInfo) * i + offsetof(UnitInfo, HP), &units_[i].HPMax, 4);
+            proc_->Write(false, selfStartOff_ + sizeof(UnitInfo) * i + offsetof(UnitInfo, SP), &units_[i].SPMax, 4);
         }
         return true;
     }
 
     bool OnF2() {
-        uint16_t count;
-        proc_->Read(false, enemyCountOff_, &count, 2);
-        if (count == 0) return false;
-        uint32_t off;
-        proc_->Read(false, enemyStartOff_, &off, 4);
-        if (off == 0) return false;
-        uint32_t hp = 0;
-        for (uint16_t i = 0; i < 64; ++i)
-            proc_->WriteRaw(off + sizeof(UnitInfo) * i + offsetof(UnitInfo, HP), &hp, 4);
-        return true;
+        uint32_t soff = unitStartOff_;
+        bool run = false;
+        while (1) {
+            uint32_t tag;
+            uint32_t off;
+            uint8_t tp;
+            proc_->Read(false, soff, &tag, 4);
+            if (tag == 0) break;
+            proc_->Read(false, soff + 8, &off, 4);
+            if (off == 0) break;
+            proc_->Read(false, soff + 0x33A, &tp, 1);
+            if (tp == 0) {
+                uint32_t hp = 0;
+                run = true;
+                proc_->WriteRaw(off + offsetof(UnitInfo, HP), &hp, 4);
+            }
+            soff += 0x388;
+        }
+        return run;
     }
 
     bool OnF3() {
         uint32_t off;
-        proc_->Read(true, currentUnitOff_, &off, 4);
-        proc_->Read(true, currentUnit_ + off * 0x388, &off, 4);
+        proc_->Read(false, currentUnitOff_, &off, 4);
+        proc_->Read(false, unitStartOff_ + off * 0x388, &off, 4);
         if (off < 0x200000) return false;
         UnitInfo u;
         proc_->ReadRaw(off, &u, sizeof(UnitInfo));
@@ -168,8 +150,8 @@ public:
 
     bool OnF5() {
         uint32_t off;
-        proc_->Read(true, currentUnitOff_, &off, 4);
-        proc_->Read(true, currentUnit_ + off * 0x388, &off, 4);
+        proc_->Read(false, currentUnitOff_, &off, 4);
+        proc_->Read(false, unitStartOff_ + off * 0x388, &off, 4);
         if (off < 0x200000) return false;
         uint32_t hp = 0;
         proc_->WriteRaw(off + offsetof(UnitInfo, HP), &hp, 4);
@@ -178,8 +160,8 @@ public:
 
     bool OnF6() {
         uint32_t off;
-        proc_->Read(true, currentUnitOff_, &off, 4);
-        proc_->Read(true, currentUnit_ + off * 0x388, &off, 4);
+        proc_->Read(false, currentUnitOff_, &off, 4);
+        proc_->Read(false, unitStartOff_ + off * 0x388, &off, 4);
         if (off < 0x200000) return false;
         uint32_t hp = 1;
         proc_->WriteRaw(off + offsetof(UnitInfo, HP), &hp, 4);
@@ -189,32 +171,26 @@ public:
     bool OnF7() {
         uint8_t count;
         int16_t n = 120;
-        proc_->Read(true, congressCountOff_, &count, 1);
+        proc_->Read(false, congressCountOff_, &count, 1);
         for (uint8_t i = 0; i < count; ++i) {
-            proc_->Write(true, congressOff_ + 0x388 * i, &n, 2);
+            proc_->Write(false, congressOff_ + 0x388 * i, &n, 2);
         }
         return true;
     }
 
     bool OnF8() {
-        uint16_t count;
-        proc_->Read(false, enemyCountOff_, &count, 2);
-        if (count == 0) return false;
         uint8_t level;
-        proc_->Read(true, 0xB49AC, &level, 1);
+        proc_->Read(true, 0xAE9AC, &level, 1);
         if (level >= 99) return false;
         if ((level + 1) % 10 == 0) level += 9;
         else level = level / 10 * 10 + 8;
-        proc_->Write(true, 0xB49AC, &level, 1);
+        proc_->Write(true, 0xAE9AC, &level, 1);
         return true;
     }
 
     bool OnF9() {
-        uint16_t count;
-        proc_->Read(false, enemyCountOff_, &count, 2);
-        if (count == 0) return false;
         uint8_t level = 98;
-        proc_->Write(true, 0xB49AC, &level, 1);
+        proc_->Write(true, 0xAE9AC, &level, 1);
         return true;
     }
 
@@ -225,10 +201,10 @@ private:
     CPluginPanel panel_;
     uint16_t count_ = 0;
     std::vector<UnitInfo> units_;
-    uintptr_t enemyStartOff_ = 0;
-    uintptr_t enemyCountOff_ = 0;
+    uintptr_t unitStartOff_ = 0;
+    uintptr_t selfStartOff_ = 0;
+    uintptr_t selfCountOff_ = 0;
     uintptr_t currentUnitOff_ = 0;
-    uintptr_t currentUnit_ = 0;
     uintptr_t congressOff_ = 0;
     uintptr_t congressCountOff_ = 0;
 };

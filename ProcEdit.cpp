@@ -160,7 +160,7 @@ void ProcEdit::DumpMemory() {
     FILE* f = fopen("dump.bin", "wb");
     LPVOID buff = malloc(0x2000000);
     SIZE_T sread = 0;
-    ReadProcessMemory(hProc_, memAddr_, buff, 0x2000000, &sread);
+    ReadProcessMemory(hProc_, baseAddr_, buff, 0x2000000, &sread);
     fwrite(buff, 1, sread, f);
     fclose(f);
     free(buff);
