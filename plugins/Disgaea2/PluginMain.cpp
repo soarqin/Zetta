@@ -122,7 +122,10 @@ public:
             uint32_t off;
             uint8_t tp;
             proc_->Read(false, soff, &tag, 4);
-            if (tag == 0) break;
+            if (tag == 0) {
+                soff += 0x388;
+                continue;
+            }
             proc_->Read(false, soff + 8, &off, 4);
             if (off == 0) break;
             proc_->Read(false, soff + 0x33A, &tp, 1);

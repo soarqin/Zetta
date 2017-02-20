@@ -269,6 +269,7 @@ public:
         panell_.m_hWnd = (HWND)0;
         for (uint32_t i = 0; i < 2; ++i) {
             if (spanel_[i].IsWindow()) {
+                spanel_[i].SetClient(NULL, false);
                 spanel_[i].DestroyWindow();
             }
             spanel_[i].m_hWnd = (HWND)0;
