@@ -149,7 +149,6 @@ public:
         } else return false;
         proc_ = proc;
         tabCtrl_ = (HWND)tc;
-        CFontHandle fnt;
         fnt.CreatePointFont(90, _T("Arial"), 0);
         CRect trc, rc;
         tabCtrl_.GetItemRect(0, trc);
@@ -230,22 +229,20 @@ public:
         txt2.SetFont(fnt, false);
         txt3.SetFont(fnt, false);
         for (uint32_t i = 0; i < 0x60; ++i) {
-            combosid_[i].Create(panel_[1].m_hWnd, CRect(8, 32 + i * 25, 100, 254 + i * 25), 0, WS_CHILD | CBS_DROPDOWNLIST | CBS_DROPDOWNLIST | WS_VSCROLL | WS_BORDER, 0, IDC_COMBOSIDBASE + i);
-            int index = combosid_[i].AddString(L"- нч -");
             if (i == 0) {
+                combosid_[i].Create(panel_[1].m_hWnd, CRect(8, 32 + i * 25, 100, 254 + i * 25), 0, WS_CHILD | CBS_DROPDOWNLIST | CBS_DROPDOWNLIST | WS_VSCROLL | WS_BORDER, 0, IDC_COMBOSIDBASE + i);
+                int index = combosid_[i].AddString(L"- нч -");
                 skillMap_[0] = 0;
                 skillMap2_[0] = 0;
-            }
-            for (auto& p : skill_names) {
-                index = combosid_[i].AddString(p.second);
-                if (i == 0) {
+                for (auto& p : skill_names) {
+                    index = combosid_[i].AddString(p.second);
                     skillMap_[index] = p.first;
                     skillMap2_[p.first] = index;
                 }
+                combosid_[i].SetFont(fnt, false);
             }
             editslvl_[i].Create(panel_[1].m_hWnd, CRect(108, 32 + i * 25, 160, 54 + i * 25), 0, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | ES_NUMBER | ES_NOIME, 0, IDC_EDITSLVLBASE + i);
             editsexp_[i].Create(panel_[1].m_hWnd, CRect(168, 32 + i * 25, 250, 54 + i * 25), 0, WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | ES_NUMBER | ES_NOIME, 0, IDC_EDITSEXPBASE + i);
-            combosid_[i].SetFont(fnt, false);
             editslvl_[i].SetFont(fnt, false);
             editsexp_[i].SetFont(fnt, false);
         }
@@ -327,7 +324,7 @@ public:
 				++count;
 			}
             for (uint32_t i = 0; i < 0x60; ++i) {
-                combosid_[i].ShowWindow(SW_HIDE);
+                if(combosid_[i].IsWindow()) combosid_[i].ShowWindow(SW_HIDE);
                 editslvl_[i].ShowWindow(SW_HIDE);
                 editsexp_[i].ShowWindow(SW_HIDE);
             }
@@ -549,6 +546,13 @@ private:
         if (start < 0) start = 0;
         if (end < 0) end = 0x60;
         for (int i = start; i < unit.skillCount && i < end; ++i) {
+            if (!combosid_[i].IsWindow()) {
+                combosid_[i].Create(panel_[1].m_hWnd, CRect(8, 32 + i * 25, 100, 254 + i * 25), 0, WS_CHILD | CBS_DROPDOWNLIST | CBS_DROPDOWNLIST | WS_VSCROLL | WS_BORDER, 0, IDC_COMBOSIDBASE + i);
+                combosid_[i].AddString(L"- нч -");
+                for (auto& p : skill_names)
+                    combosid_[i].AddString(p.second);
+                combosid_[i].SetFont(fnt, false);
+            }
             combosid_[i].ShowWindow(SW_SHOW);
             auto ite = skillMap2_.find(unit.skillID[i]);
             if (ite == skillMap2_.end())
@@ -602,6 +606,7 @@ private:
 
     CAppModule* module_ = nullptr;
     IProcEdit* proc_ = nullptr;
+    CFontHandle fnt;
     CTabCtrl tabCtrl_;
     CPluginPanel panell_;
     CScrollContainer spanel_[2];

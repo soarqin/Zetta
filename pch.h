@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include <algorithm>
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS
