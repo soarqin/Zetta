@@ -31,11 +31,13 @@ struct UnitField {
 UnitField unitfields[] = {
 	{ L"名字", 0, offsetof(UnitInfo, name), 1, nullptr, 0 },
 	{ L"职业", 0, offsetof(UnitInfo, job), 1, nullptr, 0 },
-	{ L"等级", 2, offsetof(UnitInfo, lvl), 1, nullptr, 1 },
 	{ L"Mana", 3, offsetof(UnitInfo, Mana), 1, nullptr, 1 },
+	{ L"等级", 2, offsetof(UnitInfo, lvl), 1, nullptr, 1 },
+	{ L"经验", 4, offsetof(UnitInfo, exp), 1, nullptr, 1 },
 	{ L"当前HP", 3, offsetof(UnitInfo, HP), 1, nullptr, 2 },
 	{ L"当前SP", 3, offsetof(UnitInfo, SP), 1, nullptr, 2 },
-	{ L"经验", 4, offsetof(UnitInfo, exp), 1, nullptr, 2 },
+	{ L"前科", 1, offsetof(UnitInfo, Crime), 1, nullptr, 2 },
+	{ L"累计前科", 2, offsetof(UnitInfo, TotalCrime), 1, nullptr, 2 },
 	{ L"最大HP", 3, offsetof(UnitInfo, HPMax), 1, nullptr, 3 },
 	{ L"基础HP", 3, offsetof(UnitInfo, HPBase), 1, nullptr, 3 },
 	{ L"HP成长", 1, offsetof(UnitInfo, HPGrowth), 1, nullptr, 3 },
@@ -590,6 +592,7 @@ private:
             rc.bottom = rc.top + 62 + (unit.skillCount < 0x60 ? unit.skillCount : unit.skillCount - 1) * 25;
             panel_[1].MoveWindow(rc, FALSE);
             spanel_[1].SetScrollSize(rc.Width(), rc.Height(), TRUE, false);
+			spanel_[1].UpdateLayout();
         }
     }
 

@@ -77,7 +77,10 @@ struct UnitInfo {
 	uint8_t RESGrowth;
 	uint8_t unk8[0x08]; // +0xCCC
 	uint32_t lvl; // +0xCD0
-	uint8_t unk9[0x14]; // +0xCE4
+	uint8_t unk9[0x0A]; // +0xCE4
+	uint16_t TotalCrime;
+	uint8_t Crime;
+	uint8_t unk9_2[0x07];
 	uint8_t JmMx;
 	uint8_t Jm;
 	uint8_t MvMx;

@@ -595,7 +595,8 @@ private:
             rc.bottom = rc.top + 62 + (unit.skillCount < 0x60 ? unit.skillCount : unit.skillCount - 1) * 25;
             panel_[1].MoveWindow(rc, FALSE);
             spanel_[1].SetScrollSize(rc.Width(), rc.Height(), TRUE, false);
-        }
+			spanel_[1].UpdateLayout();
+		}
     }
 
 private:
