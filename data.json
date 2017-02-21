@@ -43,8 +43,17 @@
                 ],
                 "+功能": [
                     {"name": "快速升级",       "type": "blk", "block": "prog", "offset": [{"search": "8B C8 8B 46 08 03 4D DC", "skip": 5, "patch": "B9 00 94 35 77 8B 46 08"}]},
-                    {"name": "快速提升武器熟练度", "type": "blk", "block": "prog", "offset": [{"search": "8B F0 8B CA 03 B3 68 0C 00 00", "skip": 10, "patch": "C1 E0 08 8B F0 8B CA 03 B3 68 0C 00 00"}]},
-                    {"name": "无限行动",       "type": "blk", "block": "prog", "offset": [{"search": "80 BF 36 03 00 00 00 0F 85 A7 00 00 00", "skip": 13, "patch": ""}, {"search": "80 BF 37 03 00 00 00 66 8B 35 BC AF F6 00 75 2B", "skip": 16, "patch": "66 8B 35 BC AF F6 00"}, {"search": "80 BF 36 03 00 00 00 75 6A", "skip": 9, "patch": ""}, {"search": "80 BF 37 03 00 00 00 75 30", "skip": 9, "patch": ""}]},
+                    {"name": "快速提升武器熟练度", "type": "blk", "block": "prog", "offset": [{"search": "8B F0 8B CA 03 B3 68 0C 00 00", "skip": 10, "patch": "C1 E0 10 8B F0 8B CA 03 B3 68 0C 00 00"}]},
+                    {"name": "快速提升技能熟练度", "type": "blk", "block": "prog", "offset": [{"search": "01 9C 8F 4C 07 00 00", "skip": 7, "patch": "C1 E3 08 01 9C 8F 4C 07 00 00"}]},
+                    {"name": "无限行动",       "type": "blk", "block": "prog",
+                        "offset": [
+                            {"search": "80 BF 36 03 00 00 00 0F 85 A7 00 00 00", "skip": 13, "patch": ""},
+                            {"search": "80 BF 37 03 00 00 00 66 8B 35 BC X0 X1 X2 75 2B", "skip": 16, "patch": "66 8B 35 BC X0 X1 X2"},
+                            {"search": "80 BF 37 03 00 00 00 0F 85 7D 00 00 00", "skip": 13, "patch": ""},
+                            {"search": "80 BF 36 03 00 00 00 75 6A", "skip": 9, "patch": ""},
+                            {"search": "80 BF 37 03 00 00 00 75 30", "skip": 9, "patch": ""},
+                            {"search": "80 BF 37 03 00 00 00 0F 85 8D FE FF FF", "skip": 13, "patch": ""}
+                        ]},
                     {"name": "进入关卡时BonusGauge最大", "type": "blk", "block": "prog", "offset": [{"search": "33 C0 A3 8C X0 X1 X2", "skip": 7, "patch": "B8 84 03 09 00 A3 8C X0 X1 X2 33 C0"}]}
                 ]
 			}
