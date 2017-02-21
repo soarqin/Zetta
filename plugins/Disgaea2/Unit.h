@@ -58,7 +58,15 @@ struct UnitInfo {
 	uint8_t GunClass;
 	uint8_t AxeClass;
 	uint8_t StaffClass;
-	uint8_t unk7[0x09];
+	uint8_t unk7[1];
+    uint8_t FistClassBase;
+    uint8_t SwordClassBase;
+    uint8_t SpearClassBase;
+    uint8_t BowClassBase;
+    uint8_t GunClassBase;
+    uint8_t AxeClassBase;
+    uint8_t StaffClassBase;
+    uint8_t unk7_2[1];
     uint8_t HPGrowth;
 	uint8_t SPGrowth;
 	uint8_t ATKGrowth;
