@@ -213,11 +213,12 @@ void ProcEdit::MakePatch(const std::vector<uint8_t>& search, const std::vector<u
             memcpy(odata + 1, &offset, 4);
             WriteProcessMemory(hProc_, baseAddr_ + i, odata, 5, &nwrite);
             std::vector<uint8_t> vdata;
+            /*
             if (skip > 5) {
                 vdata.resize(skip - 5);
                 memset(&vdata[0], 0x90, skip - 5);
                 WriteProcessMemory(hProc_, baseAddr_ + i + 5, &vdata[0], skip - 5, &nwrite);
-            }
+            }*/
             vdata.resize(patch.size() + 5);
             memcpy(&vdata[0], &patch[0], patch.size());
             for (size_t j = 0; j < patchMask.size(); ++j) {
