@@ -109,7 +109,7 @@ UnitField unitfields[] = {
 	{ L"", 0xFF }
 };
 
-static std::map<uint16_t, int> mitem_map, elite_map;
+static std::map<uint16_t, int> mitem_map, elite_map, habit_map;
 const std::map<uint16_t, const wchar_t*> elite_types = {
     {0, L"普通"},
     {1, L"稀有"},
@@ -117,12 +117,13 @@ const std::map<uint16_t, const wchar_t*> elite_types = {
 };
 
 UnitField itemfields[] = {
-    { L"型号", 9, offsetof(ItemInfo, id), (uintptr_t)&mitem_names, 1, (uintptr_t)&mitem_map },
-    { L"等级", 1, offsetof(ItemInfo, level), 0, 1 },
-    { L"经验", 4, offsetof(ItemInfo, exp), 0, 1},
-    { L"类型", 1, offsetof(ItemInfo, type), 0, 2 },
-    { L"图标", 1, offsetof(ItemInfo, icon), 0, 2 },
-    { L"稀有度", 8, offsetof(ItemInfo, elite), (uintptr_t)&elite_types, 2, (uintptr_t)&elite_map, [](UnitField* uf, void* ptr) {
+    { L"名称", 0, offsetof(ItemInfo, name), 0, 0 },
+    { L"型号", 9, offsetof(ItemInfo, id), (uintptr_t)&mitem_names, 0, (uintptr_t)&mitem_map },
+    { L"等级", 1, offsetof(ItemInfo, level), 0, 0 },
+    // { L"经验", 4, offsetof(ItemInfo, exp), 0, 0 },
+    { L"类型", 1, offsetof(ItemInfo, type), 0, 1 },
+    { L"图标", 1, offsetof(ItemInfo, icon), 0, 1 },
+    { L"稀有度", 8, offsetof(ItemInfo, elite), (uintptr_t)&elite_types, 1, (uintptr_t)&elite_map, [](UnitField* uf, void* ptr) {
         auto* ii = (ItemInfo*)ptr;
         switch (ii->elite) {
         case 0:
@@ -136,27 +137,43 @@ UnitField itemfields[] = {
             break;
         }
     }},
-    { L"RARITY", 1, offsetof(ItemInfo, rarity), 0, 2 },
-    { L"当前层数", 1, offsetof(ItemInfo, dungeonCur), 0, 3 },
-    { L"最大住人", 1, offsetof(ItemInfo, popMax), 0, 3 },
-    { L"MV", 1, offsetof(ItemInfo, mv), 0, 3 },
-    { L"JM", 1, offsetof(ItemInfo, jm), 0, 3 },
-    { L"HP", 7, offsetof(ItemInfo, hp), 0, 4 },
-    { L"基础HP", 7, offsetof(ItemInfo, hpBase), 0, 4 },
+    { L"RARITY", 1, offsetof(ItemInfo, rarity), 0, 1 },
+    { L"MV", 1, offsetof(ItemInfo, mv), 0, 2 },
+    { L"JM", 1, offsetof(ItemInfo, jm), 0, 2 },
+    { L"当前层数", 1, offsetof(ItemInfo, dungeonCur), 0, 2 },
+    { L"最大住人", 1, offsetof(ItemInfo, popMax), 0, 2 },
+    { L"HP", 7, offsetof(ItemInfo, hp), 0, 3 },
+    { L"基础HP", 7, offsetof(ItemInfo, hpBase), 0, 3 },
+    { L"住人1", 8, offsetof(ItemInfo, habits[0]) + 4, (uintptr_t)&habit_names, 3, (uintptr_t)&habit_map },
+    { L"", 3, offsetof(ItemInfo, habits[0]), 0, 3 },
     { L"SP", 7, offsetof(ItemInfo, sp), 0, 4 },
     { L"基础SP", 7, offsetof(ItemInfo, spBase), 0, 4 },
+    { L"住人2", 8, offsetof(ItemInfo, habits[1]) + 4, (uintptr_t)&habit_names, 4, (uintptr_t)&habit_map },
+    { L"", 3, offsetof(ItemInfo, habits[1]), 0, 4 },
     { L"ATK", 7, offsetof(ItemInfo, atk), 0, 5 },
     { L"基础ATK", 7, offsetof(ItemInfo, atkBase), 0, 5 },
-    { L"DEF", 7, offsetof(ItemInfo, def), 0, 5 },
-    { L"基础DEF", 7, offsetof(ItemInfo, defBase), 0, 5 },
-    { L"INT", 7, offsetof(ItemInfo, inte), 0, 6 },
-    { L"基础INT", 7, offsetof(ItemInfo, inteBase), 0, 6 },
-    { L"SPD", 7, offsetof(ItemInfo, spd), 0, 6 },
-    { L"基础SPD", 7, offsetof(ItemInfo, spdBase), 0, 6 },
-    { L"HIT", 7, offsetof(ItemInfo, hit), 0, 7 },
-    { L"基础HIT", 7, offsetof(ItemInfo, hitBase), 0, 7 },
-    { L"RES", 7, offsetof(ItemInfo, res), 0, 7},
-    { L"基础RES", 7, offsetof(ItemInfo, resBase), 0, 7},
+    { L"住人3", 8, offsetof(ItemInfo, habits[2]) + 4, (uintptr_t)&habit_names, 5, (uintptr_t)&habit_map },
+    { L"", 3, offsetof(ItemInfo, habits[2]), 0, 5 },
+    { L"DEF", 7, offsetof(ItemInfo, def), 0, 6 },
+    { L"基础DEF", 7, offsetof(ItemInfo, defBase), 0, 6 },
+    { L"住人4", 8, offsetof(ItemInfo, habits[3]) + 4, (uintptr_t)&habit_names, 6, (uintptr_t)&habit_map },
+    { L"", 3, offsetof(ItemInfo, habits[3]), 0, 6 },
+    { L"INT", 7, offsetof(ItemInfo, inte), 0, 7 },
+    { L"基础INT", 7, offsetof(ItemInfo, inteBase), 0, 7 },
+    { L"住人5", 8, offsetof(ItemInfo, habits[4]) + 4, (uintptr_t)&habit_names, 7, (uintptr_t)&habit_map },
+    { L"", 3, offsetof(ItemInfo, habits[4]), 0, 7 },
+    { L"SPD", 7, offsetof(ItemInfo, spd), 0, 8 },
+    { L"基础SPD", 7, offsetof(ItemInfo, spdBase), 0, 8 },
+    { L"住人6", 8, offsetof(ItemInfo, habits[5]) + 4, (uintptr_t)&habit_names, 8, (uintptr_t)&habit_map },
+    { L"", 3, offsetof(ItemInfo, habits[5]), 0, 8 },
+    { L"HIT", 7, offsetof(ItemInfo, hit), 0, 9 },
+    { L"基础HIT", 7, offsetof(ItemInfo, hitBase), 0, 9 },
+    { L"住人7", 8, offsetof(ItemInfo, habits[6]) + 4, (uintptr_t)&habit_names, 9, (uintptr_t)&habit_map },
+    { L"", 3, offsetof(ItemInfo, habits[6]), 0, 9 },
+    { L"RES", 7, offsetof(ItemInfo, res), 0, 10 },
+    { L"基础RES", 7, offsetof(ItemInfo, resBase), 0, 10 },
+    { L"住人8", 8, offsetof(ItemInfo, habits[7]) + 4, (uintptr_t)&habit_names, 10, (uintptr_t)&habit_map },
+    { L"", 3, offsetof(ItemInfo, habits[7]), 0, 10 },
     { L"", 0xFF }
 };
 
@@ -183,7 +200,7 @@ private:
             if (u->row != row) {
                 position = 8; row = u->row;
             }
-            if (!(u->type & 0x10)) {
+			if (!(u->type & 0x10) && u->name[0] != 0) {
                 CStatic editname;
                 editname.Create(m_hWnd, CRect(3 + position, 4 + 23 * row, 58 + position, 22 + 23 * row), u->name, WS_CHILD | WS_VISIBLE | SS_RIGHT);
                 editname.SetFont(fnt_, FALSE);
@@ -215,10 +232,11 @@ private:
                 width = 120;
                 break;
             }
+            uint32_t prefix = u->name[0] == 0 ? 0 : 60;
             if (!(u->type & 0x10)) {
                 if (u->type & 0x08) {
                     auto& cb = combobox_[ccount];
-                    cb.Create(m_hWnd, CRect(60 + position, 2 + 23 * row, 60 + width + position, 302 + 23 * row), 0, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 0, IDC_COMBOSIDBASE + ccount);
+                    cb.Create(m_hWnd, CRect(prefix + position, 2 + 23 * row, prefix + width + position, 302 + 23 * row), 0, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 0, IDC_COMBOSIDBASE + ccount);
                     cb.SetFont(fnt_, FALSE);
                     cb.SetWindowLongPtr(GWLP_USERDATA, (LONG_PTR)u);
                     const auto* ptr = (const std::map<uint16_t, const wchar_t*>*)u->ptr;
@@ -231,13 +249,13 @@ private:
                     }
                     ++ccount;
                 } else {
-                    editbox_[count].Create(m_hWnd, CRect(60 + position, 2 + 23 * row, 60 + width + position, 23 + 23 * row), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | ES_AUTOHSCROLL | extraFlag, 0, IDC_ITEMEDITBASE + count);
+                    editbox_[count].Create(m_hWnd, CRect(prefix + position, 2 + 23 * row, prefix + width + position, 23 + 23 * row), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | ES_AUTOHSCROLL | extraFlag, 0, IDC_ITEMEDITBASE + count);
                     editbox_[count].SetFont(fnt_, FALSE);
                     editbox_[count].SetWindowLongPtr(GWLP_USERDATA, (LONG_PTR)u);
                     ++count;
                 }
             }
-            position += 60 + width;
+            position += prefix + width;
         }
         count = 0; ccount = 0;
         wchar_t txt[256];
@@ -300,14 +318,14 @@ private:
         CRect rc;
         GetWindowRect(rc);
         rc.right = rc.left + 510;
-        rc.bottom = rc.top + 360;
+        rc.bottom = rc.top + 315;
         MoveWindow(rc);
         CenterWindow(GetParent());
         GetClientRect(rc);
         CButton btn[2];
-        btn[0].Create(m_hWnd, CRect((rc.right - rc.left) / 2 - 80, rc.bottom - rc.top - 30, (rc.right - rc.left) / 2 - 20, rc.bottom - rc.top - 8), L"确定", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 0, IDC_BTNOK);
+        btn[0].Create(m_hWnd, CRect((rc.right - rc.left) / 2 - 80, rc.bottom - rc.top - 28, (rc.right - rc.left) / 2 - 20, rc.bottom - rc.top - 6), L"确定", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 0, IDC_BTNOK);
         btn[0].SetFont(fnt_, FALSE);
-        btn[1].Create(m_hWnd, CRect((rc.right - rc.left) / 2 + 20, rc.bottom - rc.top - 30, (rc.right - rc.left) / 2 + 80, rc.bottom - rc.top - 8), L"取消", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_BTNCANCEL);
+        btn[1].Create(m_hWnd, CRect((rc.right - rc.left) / 2 + 20, rc.bottom - rc.top - 28, (rc.right - rc.left) / 2 + 80, rc.bottom - rc.top - 6), L"取消", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_BTNCANCEL);
         btn[1].SetFont(fnt_, FALSE);
         return TRUE;
     }
@@ -331,7 +349,7 @@ private:
 private:
     ItemInfo info_;
     CFontHandle fnt_;
-    CEdit editbox_[30];
+    CEdit editbox_[40];
     CComboBox combobox_[10];
 };
 
