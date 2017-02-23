@@ -173,8 +173,8 @@ public:
         charlist_.Create(panell_.m_hWnd, CRect(8, 0, 128, rc.Height() - 12), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | LBS_NOTIFY, 0, IDC_CHARLIST);
         charlist_.SetFont(fnt, false);
         CButton btn[2];
-        btn[0].Create(panell_.m_hWnd, CRect(8, rc.Height() - 22, 62, rc.Height()), L"刷新", WS_CHILD | WS_BORDER | WS_VISIBLE | BS_PUSHLIKE, 0, IDC_RELOAD);
-        btn[1].Create(panell_.m_hWnd, CRect(72, rc.Height() - 22, 128, rc.Height()), L"写入", WS_CHILD | WS_BORDER | WS_VISIBLE | BS_PUSHLIKE, 0, IDC_SAVE);
+        btn[0].Create(panell_.m_hWnd, CRect(8, rc.Height() - 22, 62, rc.Height()), L"刷新", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_RELOAD);
+        btn[1].Create(panell_.m_hWnd, CRect(72, rc.Height() - 22, 128, rc.Height()), L"写入", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_SAVE);
         btn[0].SetFont(fnt, false);
         btn[1].SetFont(fnt, false);
         LoadChars();
@@ -224,8 +224,8 @@ public:
         spanel_[0].ScreenToClient(src);
         src.bottom = 26 + 23 * row + src.top;
         panel_[0].MoveWindow(src);
-        btnsadd_.Create(panel_[1].m_hWnd, CRect(0, 0, 22, 22), L"+", WS_CHILD | WS_BORDER | BS_PUSHLIKE, 0, IDC_BTNSADD);
-        btnsdel_.Create(panel_[1].m_hWnd, CRect(0, 0, 22, 22), L"-", WS_CHILD | WS_BORDER | BS_PUSHLIKE, 0, IDC_BTNSDEL);
+        btnsadd_.Create(panel_[1].m_hWnd, CRect(0, 0, 22, 22), L"+", WS_CHILD | BS_PUSHBUTTON, 0, IDC_BTNSADD);
+        btnsdel_.Create(panel_[1].m_hWnd, CRect(0, 0, 22, 22), L"-", WS_CHILD | BS_PUSHBUTTON, 0, IDC_BTNSDEL);
         btnsadd_.SetFont(fnt, false);
         btnsdel_.SetFont(fnt, false);
         CStatic txt1, txt2, txt3;
@@ -237,7 +237,7 @@ public:
         txt3.SetFont(fnt, false);
         for (uint32_t i = 0; i < 0x60; ++i) {
             if (i == 0) {
-                combosid_[i].Create(panel_[1].m_hWnd, CRect(8, 32 + i * 25, 100, 254 + i * 25), 0, WS_CHILD | CBS_DROPDOWNLIST | CBS_DROPDOWNLIST | WS_VSCROLL | WS_BORDER, 0, IDC_COMBOSIDBASE + i);
+                combosid_[i].Create(panel_[1].m_hWnd, CRect(8, 32 + i * 25, 100, 254 + i * 25), 0, WS_CHILD | CBS_DROPDOWNLIST | CBS_DROPDOWNLIST | WS_VSCROLL, 0, IDC_COMBOSIDBASE + i);
                 int index = combosid_[i].AddString(L"- 无 -");
                 skillMap_[0] = 0;
                 skillMap2_[0] = 0;
@@ -552,7 +552,7 @@ private:
         if (end < 0) end = 0x60;
         for (int i = start; i < unit.skillCount && i < end; ++i) {
             if (!combosid_[i].IsWindow()) {
-                combosid_[i].Create(panel_[1].m_hWnd, CRect(8, 32 + i * 25, 100, 254 + i * 25), 0, WS_CHILD | CBS_DROPDOWNLIST | CBS_DROPDOWNLIST | WS_VSCROLL | WS_BORDER, 0, IDC_COMBOSIDBASE + i);
+                combosid_[i].Create(panel_[1].m_hWnd, CRect(8, 32 + i * 25, 100, 254 + i * 25), 0, WS_CHILD | CBS_DROPDOWNLIST | CBS_DROPDOWNLIST | WS_VSCROLL, 0, IDC_COMBOSIDBASE + i);
                 combosid_[i].AddString(L"- 无 -");
                 for (auto& p : skill_names)
                     combosid_[i].AddString(p.second);

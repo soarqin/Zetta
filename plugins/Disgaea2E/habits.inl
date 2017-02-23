@@ -1,4 +1,4 @@
-std::map<uint16_t, const wchar_t*> habit_names = {
+const std::map<uint16_t, const wchar_t*> habit_names = {
 {0, L"ÎÞÖ°"},
 {1, L"£È£ÐÎÝ"},
 {2, L"£Ó£ÐÎÝ"},
