@@ -83,7 +83,7 @@ public:
         CFontHandle fnt2;
         fnt2.CreatePointFont(120, _T("Arial"), 0, true);
         CButton btn1;
-        btn1.Create(panel_.m_hWnd, CRect(8, 18, 188, 48), _T("开放全部可创建角色"), WS_VISIBLE | WS_CHILD | WS_BORDER, 0, IDC_ALLJOBS);
+        btn1.Create(panel_.m_hWnd, CRect(8, 18, 188, 48), _T("开放全部可创建角色"), WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 0, IDC_ALLJOBS);
         btn1.SetFont(fnt2);
 
         for (int id = IDH_F1; id <= IDH_F9; ++id)

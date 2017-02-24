@@ -170,7 +170,7 @@ public:
         panel_[0].Create(spanel_[0].m_hWnd, CRect(0, 0, 10, 10), 0, WS_CHILD | WS_VISIBLE);
         panel_[1].Create(spanel_[1].m_hWnd, CRect(0, 0, 10, 10), 0, WS_CHILD | WS_VISIBLE);
 
-        charlist_.Create(panell_.m_hWnd, CRect(8, 0, 128, rc.Height() - 12), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | LBS_NOTIFY, 0, IDC_CHARLIST);
+        charlist_.Create(panell_.m_hWnd, CRect(8, 0, 128, rc.Height() - 12), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 0, IDC_CHARLIST);
         charlist_.SetFont(fnt, false);
         CButton btn[2];
         btn[0].Create(panell_.m_hWnd, CRect(8, rc.Height() - 22, 62, rc.Height()), L"Ë¢ÐÂ", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_RELOAD);

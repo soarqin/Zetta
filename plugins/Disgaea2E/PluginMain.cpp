@@ -17,13 +17,21 @@
 #define IDC_SAVE 4003
 #define IDC_BTNOK 4004
 #define IDC_BTNCANCEL 4005
+#define IDC_ITEMLIST 4006
+#define IDC_ITEMLIST2 4007
 #define IDC_BTNSADD 4010
 #define IDC_BTNSDEL 4011
+#define IDC_ITEMBTNREFRESH 4012
+#define IDC_ITEMBTNEDIT 4013
+#define IDC_ITEMBTNDEL 4014
+#define IDC_ITEMBTNCLONE 4015
 #define IDC_CHAREDITBASE 4050
 #define IDC_COMBOSIDBASE 4150
 #define IDC_EDITSLVLBASE 4250
 #define IDC_EDITSEXPBASE 4350
 #define IDC_ITEMEDITBASE 4450
+
+#define item_empty_text (L"- 空 -")
 
 inline void ConvUTF8(const uint8_t* str, wchar_t* out) {
     MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)str, -1, out, 256);
@@ -144,35 +152,35 @@ UnitField itemfields[] = {
     { L"最大住人", 1, offsetof(ItemInfo, popMax), 0, 2 },
     { L"HP", 7, offsetof(ItemInfo, hp), 0, 3 },
     { L"基础HP", 7, offsetof(ItemInfo, hpBase), 0, 3 },
-    { L"住人1", 8, offsetof(ItemInfo, habits[0]) + 4, (uintptr_t)&habit_names, 3, (uintptr_t)&habit_map },
+    { L"住人1", 9, offsetof(ItemInfo, habits[0]) + 4, (uintptr_t)&habit_names, 3, (uintptr_t)&habit_map },
     { L"", 3, offsetof(ItemInfo, habits[0]), 0, 3 },
     { L"SP", 7, offsetof(ItemInfo, sp), 0, 4 },
     { L"基础SP", 7, offsetof(ItemInfo, spBase), 0, 4 },
-    { L"住人2", 8, offsetof(ItemInfo, habits[1]) + 4, (uintptr_t)&habit_names, 4, (uintptr_t)&habit_map },
+    { L"住人2", 9, offsetof(ItemInfo, habits[1]) + 4, (uintptr_t)&habit_names, 4, (uintptr_t)&habit_map },
     { L"", 3, offsetof(ItemInfo, habits[1]), 0, 4 },
     { L"ATK", 7, offsetof(ItemInfo, atk), 0, 5 },
     { L"基础ATK", 7, offsetof(ItemInfo, atkBase), 0, 5 },
-    { L"住人3", 8, offsetof(ItemInfo, habits[2]) + 4, (uintptr_t)&habit_names, 5, (uintptr_t)&habit_map },
+    { L"住人3", 9, offsetof(ItemInfo, habits[2]) + 4, (uintptr_t)&habit_names, 5, (uintptr_t)&habit_map },
     { L"", 3, offsetof(ItemInfo, habits[2]), 0, 5 },
     { L"DEF", 7, offsetof(ItemInfo, def), 0, 6 },
     { L"基础DEF", 7, offsetof(ItemInfo, defBase), 0, 6 },
-    { L"住人4", 8, offsetof(ItemInfo, habits[3]) + 4, (uintptr_t)&habit_names, 6, (uintptr_t)&habit_map },
+    { L"住人4", 9, offsetof(ItemInfo, habits[3]) + 4, (uintptr_t)&habit_names, 6, (uintptr_t)&habit_map },
     { L"", 3, offsetof(ItemInfo, habits[3]), 0, 6 },
     { L"INT", 7, offsetof(ItemInfo, inte), 0, 7 },
     { L"基础INT", 7, offsetof(ItemInfo, inteBase), 0, 7 },
-    { L"住人5", 8, offsetof(ItemInfo, habits[4]) + 4, (uintptr_t)&habit_names, 7, (uintptr_t)&habit_map },
+    { L"住人5", 9, offsetof(ItemInfo, habits[4]) + 4, (uintptr_t)&habit_names, 7, (uintptr_t)&habit_map },
     { L"", 3, offsetof(ItemInfo, habits[4]), 0, 7 },
     { L"SPD", 7, offsetof(ItemInfo, spd), 0, 8 },
     { L"基础SPD", 7, offsetof(ItemInfo, spdBase), 0, 8 },
-    { L"住人6", 8, offsetof(ItemInfo, habits[5]) + 4, (uintptr_t)&habit_names, 8, (uintptr_t)&habit_map },
+    { L"住人6", 9, offsetof(ItemInfo, habits[5]) + 4, (uintptr_t)&habit_names, 8, (uintptr_t)&habit_map },
     { L"", 3, offsetof(ItemInfo, habits[5]), 0, 8 },
     { L"HIT", 7, offsetof(ItemInfo, hit), 0, 9 },
     { L"基础HIT", 7, offsetof(ItemInfo, hitBase), 0, 9 },
-    { L"住人7", 8, offsetof(ItemInfo, habits[6]) + 4, (uintptr_t)&habit_names, 9, (uintptr_t)&habit_map },
+    { L"住人7", 9, offsetof(ItemInfo, habits[6]) + 4, (uintptr_t)&habit_names, 9, (uintptr_t)&habit_map },
     { L"", 3, offsetof(ItemInfo, habits[6]), 0, 9 },
     { L"RES", 7, offsetof(ItemInfo, res), 0, 10 },
     { L"基础RES", 7, offsetof(ItemInfo, resBase), 0, 10 },
-    { L"住人8", 8, offsetof(ItemInfo, habits[7]) + 4, (uintptr_t)&habit_names, 10, (uintptr_t)&habit_map },
+    { L"住人8", 9, offsetof(ItemInfo, habits[7]) + 4, (uintptr_t)&habit_names, 10, (uintptr_t)&habit_map },
     { L"", 3, offsetof(ItemInfo, habits[7]), 0, 10 },
     { L"", 0xFF }
 };
@@ -189,6 +197,7 @@ public:
     }
     void DoInitControls() {
     }
+    inline const ItemInfo& Info() const { return info_; }
 
 private:
     BOOL OnInitDialog(CWindow wndFocus, LPARAM lInitParam) {
@@ -241,11 +250,11 @@ private:
                     cb.SetWindowLongPtr(GWLP_USERDATA, (LONG_PTR)u);
                     const auto* ptr = (const std::map<uint16_t, const wchar_t*>*)u->ptr;
                     auto* cptr = (std::map<uint16_t, int>*)u->cptr;
-                    cptr->clear();
+                    bool deal = cptr->empty();
                     for (auto& p : *ptr) {
                         int idx = cb.AddString(p.second);
                         cb.SetItemData(idx, p.first);
-                        (*cptr)[p.first] = idx;
+                        if (deal) (*cptr)[p.first] = idx;
                     }
                     ++ccount;
                 } else {
@@ -330,9 +339,67 @@ private:
         return TRUE;
     }
     LRESULT OnOK(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled) {
+        uint32_t count = 0, ccount = 0;
+        for (auto* u = itemfields; u->type != 0xFF; ++u) {
+            if (!(u->type & 0x10)) {
+                wchar_t name[256];
+                uint8_t* ptr = (uint8_t*)&info_ + u->offset;
+                switch (u->type & 0x0F) {
+                case 0:
+                    editbox_[count].GetWindowText(name, 256);
+                    ConvUCS2(name, ptr);
+                    break;
+                case 1:
+                    editbox_[count].GetWindowText(name, 256);
+                    *(uint8_t*)ptr = (uint8_t)wcstoul(name, nullptr, 10);
+                    break;
+                case 2:
+                    editbox_[count].GetWindowText(name, 256);
+                    *(uint16_t*)ptr = (uint16_t)wcstoul(name, nullptr, 10);
+                    break;
+                case 3:
+                    editbox_[count].GetWindowText(name, 256);
+                    *(uint32_t*)ptr = (uint32_t)wcstoul(name, nullptr, 10);
+                    break;
+                case 4:
+                    editbox_[count].GetWindowText(name, 256);
+                    *(uint64_t*)ptr = (uint64_t)wcstoull(name, nullptr, 10);
+                    break;
+                case 5:
+                    editbox_[count].GetWindowText(name, 256);
+                    *(int8_t*)ptr = (int8_t)wcstol(name, nullptr, 10);
+                    break;
+                case 6:
+                    editbox_[count].GetWindowText(name, 256);
+                    *(int16_t*)ptr = (int16_t)wcstol(name, nullptr, 10);
+                    break;
+                case 7:
+                    editbox_[count].GetWindowText(name, 256);
+                    *(int32_t*)ptr = (int32_t)wcstol(name, nullptr, 10);
+                    break;
+                case 8: {
+                    int sel = combobox_[ccount].GetCurSel();
+                    if (sel < 0) break;
+                    *(uint8_t*)ptr = (uint8_t)combobox_[ccount].GetItemData(sel);
+                    break;
+                }
+                case 9: {
+                    int sel = combobox_[ccount].GetCurSel();
+                    if (sel < 0) break;
+                    *(uint16_t*)ptr = (uint16_t)combobox_[ccount].GetItemData(sel);
+                    break;
+                }
+                }
+                if (u->writecb) u->writecb(u, &info_);
+                if (u->type & 0x08) ++ccount;
+                else ++count;
+            }
+        }
+        EndDialog(1);
         return 0;
     }
     LRESULT OnCancel(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled) {
+        EndDialog(0);
         return 0;
     }
     void OnClose() {
@@ -344,11 +411,11 @@ private:
         MSG_WM_CLOSE(OnClose)
         COMMAND_HANDLER(IDC_BTNOK, BN_CLICKED, OnOK)
         COMMAND_HANDLER(IDC_BTNCANCEL, BN_CLICKED, OnCancel)
-        END_MSG_MAP()
+    END_MSG_MAP()
 
 private:
     ItemInfo info_;
-    CFontHandle fnt_;
+    CFont fnt_;
     CEdit editbox_[40];
     CComboBox combobox_[10];
 };
@@ -374,6 +441,12 @@ public:
     LRESULT OnBtnSAdd(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
     LRESULT OnBtnSDel(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
     LRESULT OnItemEdit(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
+    LRESULT OnItemListDoubleClick(int id, LPNMHDR hdr, BOOL& bHandled);
+    LRESULT OnItemListItemChanged(int id, LPNMHDR hdr, BOOL& bHandled);
+    LRESULT OnItemBtnRefresh(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
+    LRESULT OnItemBtnEdit(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
+    LRESULT OnItemBtnDel(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
+    LRESULT OnItemBtnClone(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled);
 
 private:
     BEGIN_MSG_MAP_EX(CPluginPanel2)
@@ -384,6 +457,12 @@ private:
         COMMAND_RANGE_CODE_HANDLER(IDC_ITEMEDITBASE, IDC_ITEMEDITBASE + 4, BN_CLICKED, OnItemEdit)
         COMMAND_HANDLER(IDC_BTNSADD, BN_CLICKED, OnBtnSAdd)
         COMMAND_HANDLER(IDC_BTNSDEL, BN_CLICKED, OnBtnSDel)
+        COMMAND_HANDLER(IDC_ITEMBTNREFRESH, BN_CLICKED, OnItemBtnRefresh)
+        COMMAND_HANDLER(IDC_ITEMBTNEDIT, BN_CLICKED, OnItemBtnEdit)
+        COMMAND_HANDLER(IDC_ITEMBTNDEL, BN_CLICKED, OnItemBtnDel)
+        COMMAND_HANDLER(IDC_ITEMBTNCLONE, BN_CLICKED, OnItemBtnClone)
+        NOTIFY_RANGE_CODE_HANDLER(IDC_ITEMLIST, IDC_ITEMLIST2, NM_DBLCLK, OnItemListDoubleClick)
+        NOTIFY_RANGE_CODE_HANDLER(IDC_ITEMLIST, IDC_ITEMLIST2, LVN_ITEMCHANGED, OnItemListItemChanged)
     END_MSG_MAP()
 };
 
@@ -395,11 +474,11 @@ public:
 
     virtual uint32_t Init(CAppModule* mod) override {
         module_ = mod;
-        return 2;
+        return 3;
     }
 
     virtual LPCWSTR GetName(uint32_t page) override {
-        const wchar_t* names[2] = { L"角色修改", L"技能修改" };
+        const wchar_t* names[3] = { L"角色修改", L"技能修改", L"道具修改" };
         return names[page];
     }
 
@@ -408,7 +487,9 @@ public:
         if (proc->GetVersion() == "1.0.0.1") {
             selfStartOff_ = 0x2A0738;
             selfCountOff_ = 0x34D974;
+            itemStartOff_ = 0x31B538;
         } else return false;
+        itemsel_ = -1;
         proc_ = proc;
         tabCtrl_ = (HWND)tc;
         fnt_.CreatePointFont(90, _T("Arial"), 0);
@@ -417,19 +498,18 @@ public:
         tabCtrl_.GetClientRect(rc);
         rc.DeflateRect(8, trc.Height() + 8, 8, 8);
         panell_.Create(tabCtrl_.m_hWnd, CRect(rc.left, rc.top, rc.left + 140, rc.bottom), 0, WS_CHILD);
+        panel_[2].Create(tabCtrl_.m_hWnd, rc, 0, WS_CHILD | WS_BORDER);
         CRect src(rc.left + 140, rc.top, rc.right, rc.bottom);
         spanel_[0].Create(tabCtrl_.m_hWnd, src, 0, WS_CHILD | WS_BORDER);
         spanel_[1].Create(tabCtrl_.m_hWnd, src, 0, WS_CHILD | WS_BORDER);
-        spanel_[0].GetClientRect(src);
-        src.right -= 30;
         panel_[0].Create(spanel_[0].m_hWnd, CRect(0, 0, 10, 10), 0, WS_CHILD | WS_VISIBLE);
         panel_[1].Create(spanel_[1].m_hWnd, CRect(0, 0, 10, 10), 0, WS_CHILD | WS_VISIBLE);
 
-        charlist_.Create(panell_.m_hWnd, CRect(8, 0, 128, rc.Height() - 12), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | LBS_NOTIFY, 0, IDC_CHARLIST);
+        charlist_.Create(panell_.m_hWnd, CRect(8, 0, 128, rc.Height() - 22), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 0, IDC_CHARLIST);
         charlist_.SetFont(fnt_, FALSE);
         CButton btn[2];
-        btn[0].Create(panell_.m_hWnd, CRect(8, rc.Height() - 22, 62, rc.Height()), L"刷新", WS_CHILD | WS_BORDER | WS_VISIBLE, 0, IDC_RELOAD);
-        btn[1].Create(panell_.m_hWnd, CRect(72, rc.Height() - 22, 128, rc.Height()), L"写入", WS_CHILD | WS_BORDER | WS_VISIBLE, 0, IDC_SAVE);
+        btn[0].Create(panell_.m_hWnd, CRect(8, rc.Height() - 22, 62, rc.Height()), L"刷新", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_RELOAD);
+        btn[1].Create(panell_.m_hWnd, CRect(72, rc.Height() - 22, 128, rc.Height()), L"写入", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_SAVE);
         btn[0].SetFont(fnt_, FALSE);
         btn[1].SetFont(fnt_, FALSE);
         LoadChars();
@@ -520,6 +600,29 @@ public:
         spanel_[1].SetClient(panel_[1]);
         spanel_[0].ShowWindow(SW_HIDE);
         spanel_[1].ShowWindow(SW_HIDE);
+        CStatic istatic[2];
+        CButton ibtn[4];
+        istatic[0].Create(panel_[2].m_hWnd, CRect(8, 2, 108, 20), L"携带袋", WS_CHILD | WS_VISIBLE);
+        istatic[1].Create(panel_[2].m_hWnd, CRect(310, 2, 410, 20), L"仓库", WS_CHILD | WS_VISIBLE);
+        istatic[0].SetFont(fnt_, FALSE);
+        istatic[1].SetFont(fnt_, FALSE);
+        itemlist_[0].Create(panel_[2].m_hWnd, CRect(8, 20, 308, rc.Height() - 8), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS, 0, IDC_ITEMLIST);
+        itemlist_[1].Create(panel_[2].m_hWnd, CRect(310, 20, 618, rc.Height() - 8), 0, WS_CHILD | WS_BORDER | WS_VISIBLE | WS_VSCROLL | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS, 0, IDC_ITEMLIST2);
+        for (int i = 0; i < 2; ++i) {
+            itemlist_[i].SetFont(fnt_, FALSE);
+            itemlist_[i].SetExtendedListViewStyle(LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
+            itemlist_[i].InsertColumn(0, L"名称", LVCFMT_LEFT, 125);
+            itemlist_[i].InsertColumn(1, L"型号", LVCFMT_LEFT, 125);
+            itemlist_[i].InsertColumn(2, L"LV", LVCFMT_LEFT, 35);
+        }
+        ibtn[0].Create(panel_[2].m_hWnd, CRect(626, 20, 706, 41), L"刷新", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_ITEMBTNREFRESH);
+        ibtn[1].Create(panel_[2].m_hWnd, CRect(626, 50, 706, 71), L"编辑", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_ITEMBTNEDIT);
+        ibtn[2].Create(panel_[2].m_hWnd, CRect(626, 80, 706, 101), L"删除", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_ITEMBTNDEL);
+        ibtn[3].Create(panel_[2].m_hWnd, CRect(626, 110, 706, 131), L"复制", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, IDC_ITEMBTNCLONE);
+        for (int i = 0; i < 4; ++i) {
+            ibtn[i].SetFont(fnt_, FALSE);
+        }
+        LoadItems();
         /*
         for (int i = 0; i < 5; ++i) {
             editbox_[i].Create(panel_.m_hWnd, CRect(150, 8 + 30 * i, 250, 27 + 30 * i), 0, WS_CHILD | WS_BORDER | WS_VISIBLE, 0, IDC_CHAREDITBASE + i);
@@ -542,7 +645,10 @@ public:
             spanel_[i].m_hWnd = (HWND)0;
             panel_[i].m_hWnd = (HWND)0;
         }
+        panel_[2].m_hWnd = (HWND)0;
         charlist_.m_hWnd = (HWND)0;
+        itemlist_[0].m_hWnd = (HWND)0;
+        itemlist_[1].m_hWnd = (HWND)0;
         btnsadd_.m_hWnd = (HWND)0;
         btnsdel_.m_hWnd = (HWND)0;
         for (int i = 0; i < 100; ++i) {
@@ -553,20 +659,40 @@ public:
             editslvl_[i].m_hWnd = (HWND)0;
             editsexp_[i].m_hWnd = (HWND)0;
         }
+        for (int i = 0; i < 4; ++i) {
+            btnitem_[i].m_hWnd = (HWND)0;
+        }
         proc_ = nullptr;
         tabCtrl_ = (HWND)0;
         count_ = 0;
+        fnt_.DeleteObject();
         units_.clear();
     }
 
     virtual void Show(uint32_t page) override {
-        panell_.ShowWindow(SW_SHOW);
-        spanel_[page].ShowWindow(SW_SHOW);
+        switch (page) {
+        case 0:
+        case 1:
+            panell_.ShowWindow(SW_SHOW);
+            spanel_[page].ShowWindow(SW_SHOW);
+            break;
+        case 2:
+            panel_[2].ShowWindow(SW_SHOW);
+            break;
+        }
     }
 
     virtual void Hide(uint32_t page) override {
-        panell_.ShowWindow(SW_HIDE);
-        spanel_[page].ShowWindow(SW_HIDE);
+        switch (page) {
+        case 0:
+        case 1:
+            panell_.ShowWindow(SW_HIDE);
+            spanel_[page].ShowWindow(SW_HIDE);
+            break;
+        case 2:
+            panel_[2].ShowWindow(SW_HIDE);
+            break;
+        }
     }
 
     virtual void Tick(uint32_t page) override {
@@ -649,7 +775,7 @@ public:
 			++count;
 		}
         for (uint32_t i = 0; i < 4; ++i) {
-            auto* ii = (ItemInfo*)(unit.equip + 0x180 * i);
+            auto* ii = (ItemInfo*)(unit.equip + sizeof(ItemInfo) * i);
             wchar_t name[256];
             if (ii->id == 0) {
                 btnitem_[i].SetWindowTextW(L"- 无 -");
@@ -812,8 +938,99 @@ public:
         if (idx >= (uint16_t)units_.size()) return;
         auto& unit = units_[idx];
         CItemDlg dlg;
-        dlg.SetItem(*(ItemInfo*)(unit.equip + 0x180 * index));
-        dlg.DoModal(tabCtrl_);
+        dlg.SetItem(*(ItemInfo*)(unit.equip + sizeof(ItemInfo) * index));
+        if (dlg.DoModal(tabCtrl_)) {
+            memcpy(unit.equip + sizeof(ItemInfo) * index, &dlg.Info(), sizeof(ItemInfo));
+            wchar_t text[256];
+            ConvUTF8(dlg.Info().name, text);
+            btnitem_[index].SetWindowText(text);
+        }
+    }
+
+    void DoItemRefresh() {
+        LoadItems();
+    }
+
+    void DoItemEdit() {
+        if (itemsel_ < 0) return;
+        int type = itemsel_ < 24 ? 0 : 1;
+        int sel = itemsel_ < 24 ? itemsel_ : itemsel_ - 24;
+        uint32_t index = (uint32_t)itemlist_[type].GetItemData(sel);
+        CItemDlg dlg;
+        ItemInfo info;
+        proc_->Read(false, itemStartOff_ + sizeof(ItemInfo) * index, &info, sizeof(ItemInfo));
+        dlg.SetItem(info);
+        if (dlg.DoModal(tabCtrl_)) {
+            wchar_t text[256];
+            auto& ii = dlg.Info();
+            if (ii.id == 0)
+                lstrcpy(text, item_empty_text);
+            else
+                ConvUTF8(ii.name, text);
+            itemlist_[type].SetItemText(sel, 0, text);
+            if (ii.id == 0) {
+                itemlist_[type].SetItemText(sel, 1, L"");
+                itemlist_[type].SetItemText(sel, 2, L"");
+            } else {
+                auto ite = mitem_names.find(ii.id);
+                if (ite != mitem_names.end())
+                    itemlist_[type].SetItemText(sel, 1, ite->second);
+                wsprintf(text, L"%u", ii.level);
+                itemlist_[type].SetItemText(sel, 2, text);
+            }
+            proc_->Write(false, itemStartOff_ + sizeof(ItemInfo) * index, &ii, sizeof(ItemInfo));
+        }
+    }
+
+    void DoItemDel() {
+        if (itemsel_ < 0) return;
+        int type = itemsel_ < 24 ? 0 : 1;
+        int sel = itemsel_ < 24 ? itemsel_ : itemsel_ - 24;
+        uint32_t index = (uint32_t)itemlist_[type].GetItemData(sel);
+        CItemDlg dlg;
+        ItemInfo info;
+        proc_->Read(false, itemStartOff_ + sizeof(ItemInfo) * index, &info, sizeof(ItemInfo));
+        info.id = 0;
+        proc_->Write(false, itemStartOff_ + sizeof(ItemInfo) * index, &info, sizeof(ItemInfo));
+        itemlist_[type].SetItemText(sel, 0, item_empty_text);
+        itemlist_[type].SetItemText(sel, 1, L"");
+        itemlist_[type].SetItemText(sel, 2, L"");
+    }
+
+    void DoItemClone() {
+        if (itemsel_ < 0) return;
+        int type = itemsel_ < 24 ? 0 : 1;
+        int sel = itemsel_ < 24 ? itemsel_ : itemsel_ - 24;
+        uint32_t index = (uint32_t)itemlist_[type].GetItemData(sel);
+        std::vector<ItemInfo> info;
+        info.resize(536);
+        proc_->Read(false, itemStartOff_, &info[0], sizeof(ItemInfo) * 536);
+        for (uint32_t i = 0; i < 512 + 24; ++i) {
+            if (i != index && info[i].id == 0) {
+                proc_->Write(false, itemStartOff_ + sizeof(ItemInfo) * i, &info[index], sizeof(ItemInfo));
+                type = i < 24 ? 0 : 1;
+                sel = i < 24 ? i : i - 24;
+                auto& il = itemlist_[type];
+                wchar_t text[256];
+                if (info[index].id == 0)
+                    lstrcpy(text, item_empty_text);
+                else
+                    ConvUTF8(info[index].name, text);
+                il.SetItemText(sel, 0, text);
+                if (info[index].id == 0) return;
+                auto ite = mitem_names.find(info[index].id);
+                if (ite != mitem_names.end())
+                    il.SetItemText(sel, 1, ite->second);
+                wsprintf(text, L"%u", info[index].level);
+                il.SetItemText(sel, 2, text);
+                return;
+            }
+        }
+        ::MessageBoxW(tabCtrl_, L"没有剩余的空位!", L"复制物品", MB_OK | MB_ICONERROR);
+    }
+
+    void OnItemSelChange(int sel) {
+        itemsel_ = sel;
     }
 
 private:
@@ -833,12 +1050,49 @@ private:
         }
     }
 
+    void LoadItems() {
+        std::vector<ItemInfo> info;
+        info.resize(536);
+        proc_->Read(false, itemStartOff_, &info[0], sizeof(ItemInfo) * 536);
+        for (int i = 0; i < 2; ++i) {
+            itemlist_[i].SetRedraw(FALSE);
+            itemlist_[i].DeleteAllItems();
+        }
+        for (uint32_t i = 0; i < 512 + 24; ++i) {
+            wchar_t text[256];
+            if (info[i].id == 0)
+                lstrcpy(text, item_empty_text);
+            else
+                ConvUTF8(info[i].name, text);
+            CListViewCtrl* il;
+            uint32_t index;
+            if (i < 24) {
+                il = &itemlist_[0];
+                index = i;
+            } else {
+                il = &itemlist_[1];
+                index = i - 24;
+            }
+            index = il->AddItem(index, 0, text);
+            if (info[i].id == 0) continue;
+            auto ite = mitem_names.find(info[i].id);
+            if (ite != mitem_names.end())
+                il->SetItemText(index, 1, ite->second);
+            wsprintf(text, L"%u", info[i].level);
+            il->SetItemText(index, 2, text);
+            il->SetItemData(index, i);
+        }
+        for (int i = 0; i < 2; ++i)
+            itemlist_[i].SetRedraw(TRUE);
+        itemsel_ = -1;
+    }
+
     void RefreshSkillUI(UnitInfo& unit, int start = -1, int end = -1) {
         if (start < 0) start = 0;
         if (end < 0) end = 0x60;
         for (int i = start; i < unit.skillCount && i < end; ++i) {
             if (!combosid_[i].IsWindow()) {
-                combosid_[i].Create(panel_[1].m_hWnd, CRect(8, 32 + i * 25, 100, 254 + i * 25), 0, WS_CHILD | CBS_DROPDOWNLIST | CBS_DROPDOWNLIST | WS_VSCROLL | WS_BORDER, 0, IDC_COMBOSIDBASE + i);
+                combosid_[i].Create(panel_[1].m_hWnd, CRect(8, 32 + i * 25, 100, 254 + i * 25), 0, WS_CHILD | CBS_DROPDOWNLIST | CBS_DROPDOWNLIST | WS_VSCROLL, 0, IDC_COMBOSIDBASE + i);
                 combosid_[i].AddString(L"- 无 -");
                 for (auto& p : skill_names)
                     combosid_[i].AddString(p.second);
@@ -888,15 +1142,18 @@ private:
 private:
     uintptr_t selfStartOff_ = 0;
     uintptr_t selfCountOff_ = 0;
+    uintptr_t itemStartOff_ = 0;
+    int itemsel_ = -1;
 
     CAppModule* module_ = nullptr;
     IProcEdit* proc_ = nullptr;
-    CFontHandle fnt_;
+    CFont fnt_;
     CTabCtrl tabCtrl_;
     CPluginPanel panell_;
     CScrollContainer spanel_[2];
-    CPluginPanel2 panel_[2];
+    CPluginPanel2 panel_[3];
     CListBox charlist_;
+    CListViewCtrl itemlist_[2];
     CEdit editbox_[100];
     CComboBox combosid_[0x60];
     CEdit editslvl_[0x60];
@@ -955,6 +1212,48 @@ LRESULT CPluginPanel2::OnBtnSDel(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHan
 
 LRESULT CPluginPanel2::OnItemEdit(WORD notifyCode, WORD id, HWND hwnd, BOOL & bHandled) {
     gPlugin.OnItemEdit(id - IDC_ITEMEDITBASE);
+    return 0;
+}
+
+LRESULT CPluginPanel2::OnItemListDoubleClick(int id, LPNMHDR hdr, BOOL& bHandled) {
+    gPlugin.DoItemEdit();
+    return 0;
+}
+
+LRESULT CPluginPanel2::OnItemListItemChanged(int id, LPNMHDR hdr, BOOL& bHandled) {
+    NMLISTVIEW* lpnmlv = (NMLISTVIEW*)hdr;
+    if ((lpnmlv->uOldState & LVIS_SELECTED) == 0 && (lpnmlv->uNewState & LVIS_SELECTED) != 0) {
+        switch (hdr->idFrom) {
+        case IDC_ITEMLIST:
+            gPlugin.OnItemSelChange(lpnmlv->iItem);
+            break;
+        case IDC_ITEMLIST2:
+            gPlugin.OnItemSelChange(24 + lpnmlv->iItem);
+            break;
+        }
+    } else if ((lpnmlv->uOldState & LVIS_SELECTED) != 0 && (lpnmlv->uNewState & LVIS_SELECTED) == 0) {
+        gPlugin.OnItemSelChange(-1);
+    }
+    return 0;
+}
+
+LRESULT CPluginPanel2::OnItemBtnRefresh(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled) {
+    gPlugin.DoItemRefresh();
+    return 0;
+}
+
+LRESULT CPluginPanel2::OnItemBtnEdit(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled) {
+    gPlugin.DoItemEdit();
+    return 0;
+}
+
+LRESULT CPluginPanel2::OnItemBtnDel(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled) {
+    gPlugin.DoItemDel();
+    return 0;
+}
+
+LRESULT CPluginPanel2::OnItemBtnClone(WORD notifyCode, WORD id, HWND hwnd, BOOL& bHandled) {
+    gPlugin.DoItemClone();
     return 0;
 }
 
