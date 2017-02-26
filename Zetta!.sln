@@ -17,24 +17,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Disgaea2", "plugins\Disgaea
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C5CDA9D3-34FE-4390-A0D3-C1F69AD2B29D}.Debug|x64.ActiveCfg = Debug|Win32
 		{C5CDA9D3-34FE-4390-A0D3-C1F69AD2B29D}.Debug|x86.ActiveCfg = Debug|Win32
 		{C5CDA9D3-34FE-4390-A0D3-C1F69AD2B29D}.Debug|x86.Build.0 = Debug|Win32
-		{C5CDA9D3-34FE-4390-A0D3-C1F69AD2B29D}.Release|x64.ActiveCfg = Release|Win32
 		{C5CDA9D3-34FE-4390-A0D3-C1F69AD2B29D}.Release|x86.ActiveCfg = Release|Win32
 		{C5CDA9D3-34FE-4390-A0D3-C1F69AD2B29D}.Release|x86.Build.0 = Release|Win32
-		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Debug|x64.ActiveCfg = Debug|x64
-		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Debug|x64.Build.0 = Debug|x64
 		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Debug|x86.ActiveCfg = Debug|Win32
 		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Debug|x86.Build.0 = Debug|Win32
-		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Release|x64.ActiveCfg = Release|x64
-		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Release|x64.Build.0 = Release|x64
 		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Release|x86.ActiveCfg = Release|Win32
 		{B0435CAE-6067-4B4F-BF6C-BD10A4FA56E3}.Release|x86.Build.0 = Release|Win32
 		{5FF322E4-E71B-446C-8E9E-E7EF40438E5D}.Debug|x64.ActiveCfg = Debug|x64

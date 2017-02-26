@@ -8,7 +8,7 @@
 #define _RICHEDIT_VER 0x0100
 #define NOMINMAX
 
-#include <winsock2.h>
+#include <windows.h>
 
 #include <cstdlib>
 #include <tchar.h>
