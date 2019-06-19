@@ -37,7 +37,7 @@ int Run(LPTSTR /*lpCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT) {
     CMessageLoop theLoop;
     _Module.AddMessageLoop(&theLoop);
     CMainWnd wndMain;
-    if (wndMain.Create(NULL, CWindow::rcDefault, _T("Zetta!"), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX) == NULL) {
+    if (wndMain.Create(NULL, CWindow::rcDefault, _T("Zetta!"), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, WS_EX_OVERLAPPEDWINDOW) == NULL) {
         ATLTRACE(_T("Main window creation failed!\n"));
         return 0;
     }

@@ -13,26 +13,39 @@ std::wstring U2W(const std::string& n) {
     return r;
 }
 
+std::map<int, std::vector<CButton*>> groupCheckBoxes_;
 
 LRESULT CCommonPanel::OnBytes(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
     PatchAddr* p = (PatchAddr*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
     if (p == NULL) return 0;
     CButton btn = hWnd;
     if (btn.GetCheck()) {
+		if (p->group) {
+			gProcEdit.CancelGroupPatch(p->group);
+			auto gite = groupCheckBoxes_.find(p->group);
+			if (gite != groupCheckBoxes_.end()) {
+				for (auto& b: gite->second) {
+					if (b->m_hWnd != hWnd)
+						b->SetCheck(FALSE);
+				}
+			}
+		}
 		if (p->type == PT_BYTES) {
 			for (auto& pp : p->bytes) {
-				gProcEdit.MakePatch(pp.search, pp.searchMask, pp.patch, pp.patchMask, pp.skip, pp.poff);
+				gProcEdit.MakePatch(p->group, pp.search, pp.searchMask, pp.patch, pp.patchMask, pp.skip, pp.poff);
 			}
 		} else {
 			for (auto& pp : p->bytes) {
-				gProcEdit.MakeHardPatch(pp.search, pp.searchMask, pp.patch, pp.patchMask, pp.skip, pp.poff);
+				gProcEdit.MakeHardPatch(p->group, pp.search, pp.searchMask, pp.patch, pp.patchMask, pp.skip, pp.poff);
 			}
 		}
     } else {
 		for (auto& pp : p->bytes) {
 			gProcEdit.CancelPatch(pp.poff);
 		}
-    }
+		if (p->group)
+			gProcEdit.CancelGroupPatch(p->group);
+	}
     return 0;
 }
 
@@ -300,6 +313,7 @@ void CMainWnd::BuildForm() {
                     chb->Create(pan->m_hWnd, CRect(8 + cwidth + 8, currtop - lasttop - 2, 8 + cwidth + 8 + 18, currtop - lasttop - 2 + 18), _T(""), WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX, 0, IDC_BYTESBASE + p.offset);
                     chb->SetWindowLongPtr(GWLP_USERDATA, (LONG_PTR)&p);
                     checkboxes_.push_back(chb);
+					if (p.group) groupCheckBoxes_[p.group].push_back(chb);
                 } else {
                     auto* teb = new CEdit;
                     teb->Create(pan->m_hWnd, CRect(8 + cwidth + 8, currtop - lasttop - 2, 8 + cwidth + 8 + 100, currtop - lasttop - 2 + 17), _T(""), WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER | ES_AUTOHSCROLL | ES_LEFT | ES_NOIME, 0, IDC_EDITBASE + p.index);

@@ -5,6 +5,12 @@
 #include <map>
 #include <vector>
 
+#ifdef _WIN64
+const size_t SKIP_LEN = 14;
+#else
+const size_t SKIP_LEN = 5;
+#endif
+
 enum PatchType {
     PT_U8,
     PT_U16,
@@ -34,6 +40,7 @@ struct PatchBytes {
 
 struct PatchAddr {
     std::string name;
+	int group;
     PatchType type;
     PatchPos pos;
     uintptr_t offset;

@@ -91,6 +91,10 @@ void Patch::Load(const char* filename) {
                         paddr.pos = PP_MEM;
                     else
                         paddr.pos = PP_CODE;
+					if (m3->HasMember("group"))
+						paddr.group = (*m3)["group"].GetInt();
+					else
+						paddr.group = 0;
 					if (paddr.type == PT_HARDPATCH) {
 						auto oobj = (*m3)["offset"].GetArray();
 						for (auto m4 = oobj.Begin(); m4 != oobj.End(); ++m4) {
@@ -106,7 +110,7 @@ void Patch::Load(const char* filename) {
                             ParseBytes((*m4)["patch"].GetString(), pb.patch, pb.patchMask);
                             ParseBytes((*m4)["search"].GetString(), pb.search, pb.searchMask);
                             paddr.bytes.push_back(pb);
-                            sz = (sz + pb.patch.size() + 5 + 0x0FUL) & ~0x0FUL;
+                            sz = (sz + pb.patch.size() + SKIP_LEN + 0x0FUL) & ~0x0FUL;
                         }
                     }
                     else

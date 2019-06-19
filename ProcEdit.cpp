@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "ProcEdit.h"
+#include "Patch.h"
 
 #include "Zetta!.h"
 
@@ -195,9 +196,9 @@ inline bool MatchMem(size_t sz, const uint8_t* mem, const uint8_t* search, const
     return true;
 }
 
-void ProcEdit::MakePatch(const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff) {
-    if (skip < 5) return;
-    BYTE* data = (BYTE*)malloc(baseSize_);
+void ProcEdit::MakePatch(int group, const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff) {
+	if (skip < SKIP_LEN) return;
+	BYTE* data = (BYTE*)malloc(baseSize_);
     SIZE_T nread;
     if (!ReadProcessMemory(hProc_, baseAddr_, data, baseSize_, &nread)) {
         free(data);
@@ -210,18 +211,24 @@ void ProcEdit::MakePatch(const std::vector<uint8_t>& search, const std::vector<u
         if (MatchMem(ssz, data + i, &search[0], &searchMask[0])) {
             std::vector<uint8_t> orig(data + i, data + i + skip);
             patched_[poff] = std::make_pair(baseAddr_ + i, orig);
-            SIZE_T nwrite;
-            uint8_t odata[5] = {0xE9, 0, 0, 0, 0};
-            uintptr_t offset = vaddr - (baseAddr_ + i + 5);
-            memcpy(odata + 1, &offset, 4);
-            WriteProcessMemory(hProc_, baseAddr_ + i, odata, 5, &nwrite);
+			if (group) groupPatched_[group].insert(poff);
+			SIZE_T nwrite;
+#ifdef _WIN64
+			uint8_t odata[SKIP_LEN] = { 0xFF, 0x25, 0, 0, 0, 0 };
+			memcpy(odata + 6, &vaddr, 8);
+#else
+			uint8_t odata[SKIP_LEN] = { 0xE9, 0, 0, 0, 0 };
+			uintptr_t offset = vaddr - (baseAddr_ + i + SKIP_LEN);
+			memcpy(odata + 1, &offset, 4);
+#endif
+            WriteProcessMemory(hProc_, baseAddr_ + i, odata, SKIP_LEN, &nwrite);
             std::vector<uint8_t> vdata;
-            if (skip > 5) {
-                vdata.resize(skip - 5);
-                memset(&vdata[0], 0x90, skip - 5);
-                WriteProcessMemory(hProc_, baseAddr_ + i + 5, &vdata[0], skip - 5, &nwrite);
+            if (skip > SKIP_LEN) {
+                vdata.resize(skip - SKIP_LEN);
+                memset(&vdata[0], 0x90, skip - SKIP_LEN);
+                WriteProcessMemory(hProc_, baseAddr_ + i + SKIP_LEN, &vdata[0], skip - SKIP_LEN, &nwrite);
             }
-            vdata.resize(patch.size() + 5);
+            vdata.resize(patch.size() + SKIP_LEN);
             memcpy(&vdata[0], &patch[0], patch.size());
             for (size_t j = 0; j < patchMask.size(); ++j) {
                 if (patchMask[j] > 0) {
@@ -231,17 +238,23 @@ void ProcEdit::MakePatch(const std::vector<uint8_t>& search, const std::vector<u
                     }
                 }
             }
-            vdata[patch.size()] = 0xE9;
-            offset = baseAddr_ + i + skip - (vaddr + patch.size() + 5);
-            memcpy(&vdata[patch.size() + 1], &offset, 4);
-            WriteProcessMemory(hProc_, vaddr, &vdata[0], patch.size() + 5, &nwrite);
+#ifdef _WIN64
+			auto ptr = baseAddr_ + i + skip;
+			memcpy(vdata.data() + patch.size(), "\xFF\x25\x00\x00\x00\x00", 6);
+			memcpy(vdata.data() + patch.size() + 6, &ptr, 8);
+#else
+			vdata[patch.size()] = 0xE9;
+			offset = baseAddr_ + i + skip - (vaddr + patch.size() + SKIP_LEN);
+			memcpy(&vdata[patch.size() + 1], &offset, 4);
+#endif
+            WriteProcessMemory(hProc_, vaddr, &vdata[0], patch.size() + SKIP_LEN, &nwrite);
             break;
         }
     }
     free(data);
 }
 
-void ProcEdit::MakeHardPatch(const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff) {
+void ProcEdit::MakeHardPatch(int group, const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff) {
 	BYTE* data = (BYTE*)malloc(baseSize_);
 	SIZE_T nread;
 	if (!ReadProcessMemory(hProc_, baseAddr_, data, baseSize_, &nread)) {
@@ -254,6 +267,7 @@ void ProcEdit::MakeHardPatch(const std::vector<uint8_t>& search, const std::vect
 		if (MatchMem(ssz, data + i, &search[0], &searchMask[0])) {
 			std::vector<uint8_t> orig(data + i + skip, data + i + skip + patch.size());
 			patched_[poff] = std::make_pair(baseAddr_ + i + skip, orig);
+			if (group) groupPatched_[group].insert(poff);
 			std::vector<uint8_t> vdata;
 			vdata.resize(patch.size());
 			memcpy(&vdata[0], &patch[0], patch.size());
@@ -278,6 +292,15 @@ void ProcEdit::CancelPatch(size_t poff) {
     if (ite == patched_.end()) return;
     SIZE_T nwrite;
     WriteProcessMemory(hProc_, ite->second.first, &ite->second.second[0], ite->second.second.size(), &nwrite);
+	patched_.erase(ite);
+}
+
+void ProcEdit::CancelGroupPatch(int group) {
+	auto gite = groupPatched_.find(group);
+	if (gite == groupPatched_.end()) return;
+	for (auto off : gite->second)
+		CancelPatch(off);
+	groupPatched_.erase(gite);
 }
 
 void ProcEdit::Cleanup() {

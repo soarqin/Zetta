@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 class ProcEdit: public IProcEdit {
 public:
@@ -52,9 +53,10 @@ public:
 	virtual uint32_t GetCRC() override {
 		return crc_;
 	}
-    void MakePatch(const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff);
-	void MakeHardPatch(const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff);
+    void MakePatch(int group, const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff);
+	void MakeHardPatch(int group, const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff);
 	void CancelPatch(size_t poff);
+	void CancelGroupPatch(int group);
 
 private:
     void Cleanup();
@@ -68,6 +70,7 @@ private:
     std::string version_;
 	uint32_t crc_;
     std::map<size_t, std::pair<BYTE*, std::vector<uint8_t>>> patched_;
+	std::map<int, std::set<size_t>> groupPatched_;
 };
 
 extern ProcEdit gProcEdit;
