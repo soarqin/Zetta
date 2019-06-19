@@ -7,7 +7,7 @@
 
 std::wstring U2W(const std::string& n) {
     std::wstring r;
-    int sz = ::MultiByteToWideChar(CP_UTF8, 0, n.c_str(), n.length(), NULL, 0);
+    size_t sz = ::MultiByteToWideChar(CP_UTF8, 0, n.c_str(), n.length(), NULL, 0);
     r.resize(sz);
     ::MultiByteToWideChar(CP_UTF8, 0, n.c_str(), n.length(), &r[0], sz);
     return r;
@@ -19,13 +19,19 @@ LRESULT CCommonPanel::OnBytes(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
     if (p == NULL) return 0;
     CButton btn = hWnd;
     if (btn.GetCheck()) {
-        for (auto& pp : p->bytes) {
-            gProcEdit.MakePatch(pp.search, pp.searchMask, pp.patch, pp.patchMask, pp.skip, pp.poff);
-        }
+		if (p->type == PT_BYTES) {
+			for (auto& pp : p->bytes) {
+				gProcEdit.MakePatch(pp.search, pp.searchMask, pp.patch, pp.patchMask, pp.skip, pp.poff);
+			}
+		} else {
+			for (auto& pp : p->bytes) {
+				gProcEdit.MakeHardPatch(pp.search, pp.searchMask, pp.patch, pp.patchMask, pp.skip, pp.poff);
+			}
+		}
     } else {
-        for (auto& pp : p->bytes) {
-            gProcEdit.CancelPatch(pp.poff);
-        }
+		for (auto& pp : p->bytes) {
+			gProcEdit.CancelPatch(pp.poff);
+		}
     }
     return 0;
 }
@@ -289,7 +295,7 @@ void CMainWnd::BuildForm() {
                 lab2->SetFont(fnt_);
                 lab2->MoveWindow(CRect(8, currtop - lasttop, 8 + cwidth, currtop - lasttop + 20));
                 labels_.push_back(lab2);
-                if (p.type == PT_BYTES) {
+                if (p.type == PT_BYTES || p.type == PT_HARDPATCH) {
                     auto* chb = new CButton;
                     chb->Create(pan->m_hWnd, CRect(8 + cwidth + 8, currtop - lasttop - 2, 8 + cwidth + 8 + 18, currtop - lasttop - 2 + 18), _T(""), WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX, 0, IDC_BYTESBASE + p.offset);
                     chb->SetWindowLongPtr(GWLP_USERDATA, (LONG_PTR)&p);
@@ -452,6 +458,6 @@ void CMainWnd::UpdateTitle() {
     if (spec_ == nullptr)
         wsprintf(title, L"Zetta! v%s", ver);
     else
-        wsprintf(title, L"Zetta! v%s - %s", ver, spec_->name.c_str());
+        wsprintf(title, L"%s", spec_->name.c_str());
     SetWindowText(title);
 }

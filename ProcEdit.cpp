@@ -103,7 +103,10 @@ void ProcEdit::Find(const std::string& className) {
     baseSize_ = 0;
     crc_ = 0;
     HWND hwnd = FindWindowA(className.c_str(), NULL);
-    if (hwnd == NULL) return;
+    if (hwnd == NULL) {
+        hwnd = FindWindowA(NULL, className.c_str());
+        if (hwnd == NULL) return;
+    }
     DWORD procId = 0;
     GetWindowThreadProcessId(hwnd, &procId);
     hProc_ = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procId);
@@ -166,7 +169,7 @@ void ProcEdit::DumpMemory() {
     free(buff);
 
     f = fopen("dump.txt", "wt");
-    fprintf(f, "Base Addr: %08X\n", (uintptr_t)baseAddr_);
+    fprintf(f, "Base Addr: %08IX\n", (uintptr_t)baseAddr_);
     LPBYTE addr = baseAddr_;
 
     fprintf(f, "ADDRESS       SIZE   PROTECT      TYPE\n");
@@ -174,7 +177,7 @@ void ProcEdit::DumpMemory() {
     while (VirtualQueryEx(hProc_, addr, &info, sizeof(info)) != 0) {
         addr = (BYTE*)info.BaseAddress + info.RegionSize;
         if (info.State != MEM_COMMIT) continue;
-        fprintf(f, "%08X  %8X  %8X  %8X\n", (uint32_t)(uintptr_t)info.BaseAddress, info.RegionSize, info.Protect, info.Type);
+        fprintf(f, "%08IX  %8IX  %8X  %8X\n", (uintptr_t)info.BaseAddress, info.RegionSize, info.Protect, info.Type);
     }
     fclose(f);
 }
@@ -209,7 +212,7 @@ void ProcEdit::MakePatch(const std::vector<uint8_t>& search, const std::vector<u
             patched_[poff] = std::make_pair(baseAddr_ + i, orig);
             SIZE_T nwrite;
             uint8_t odata[5] = {0xE9, 0, 0, 0, 0};
-            uint32_t offset = vaddr - (baseAddr_ + i + 5);
+            uintptr_t offset = vaddr - (baseAddr_ + i + 5);
             memcpy(odata + 1, &offset, 4);
             WriteProcessMemory(hProc_, baseAddr_ + i, odata, 5, &nwrite);
             std::vector<uint8_t> vdata;
@@ -236,6 +239,38 @@ void ProcEdit::MakePatch(const std::vector<uint8_t>& search, const std::vector<u
         }
     }
     free(data);
+}
+
+void ProcEdit::MakeHardPatch(const std::vector<uint8_t>& search, const std::vector<uint8_t>& searchMask, const std::vector<uint8_t>& patch, const std::vector<uint8_t>& patchMask, size_t skip, size_t poff) {
+	BYTE* data = (BYTE*)malloc(baseSize_);
+	SIZE_T nread;
+	if (!ReadProcessMemory(hProc_, baseAddr_, data, baseSize_, &nread)) {
+		free(data);
+		return;
+	}
+	auto ssz = search.size();
+	SIZE_T nmax = baseSize_ - ssz;
+	for (SIZE_T i = 0; i < nmax; ++i) {
+		if (MatchMem(ssz, data + i, &search[0], &searchMask[0])) {
+			std::vector<uint8_t> orig(data + i + skip, data + i + skip + patch.size());
+			patched_[poff] = std::make_pair(baseAddr_ + i + skip, orig);
+			std::vector<uint8_t> vdata;
+			vdata.resize(patch.size());
+			memcpy(&vdata[0], &patch[0], patch.size());
+			for (size_t j = 0; j < patchMask.size(); ++j) {
+				if (patchMask[j] > 0) {
+					for (size_t k = 0; k < searchMask.size(); ++k) {
+						if (searchMask[k] == patchMask[j])
+							vdata[j] = data[i + k];
+					}
+				}
+			}
+			SIZE_T nwrite;
+			WriteProcessMemory(hProc_, baseAddr_ + i + skip, &vdata[0], vdata.size(), &nwrite);
+			break;
+		}
+	}
+	free(data);
 }
 
 void ProcEdit::CancelPatch(size_t poff) {

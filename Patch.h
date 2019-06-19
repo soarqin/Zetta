@@ -14,6 +14,7 @@ enum PatchType {
     PT_I16,
     PT_I32,
     PT_I64,
+	PT_HARDPATCH,
     PT_BYTES,
 };
 
