@@ -32,7 +32,7 @@ LRESULT CCommonPanel::OnBytes(WORD nNotifyCode, WORD nID, HWND hWnd, BOOL &) {
 		}
 		if (p->type == PT_BYTES) {
 			for (auto& pp : p->bytes) {
-				gProcEdit.MakePatch(p->group, pp.search, pp.searchMask, pp.patch, pp.patchMask, pp.skip, pp.poff);
+				gProcEdit.MakePatch(p->group, pp.search, pp.searchMask, pp.patch, pp.patchMask, pp.post, pp.postMask, pp.skip, pp.poff);
 			}
 		} else {
 			for (auto& pp : p->bytes) {
@@ -267,7 +267,7 @@ void CMainWnd::BuildForm() {
         tabctrl_.GetItemRect(0, trc);
 
         unsigned maxheight = 0, maxwidth = 0;
-        unsigned currleft = 0, currtop = trc.Height() + 8;
+        unsigned currleft = 8, currtop = trc.Height() + 8;
         for (auto& b : spec_->blocks) {
             if (b.newColumn) {
                 currleft += maxwidth + 8;
@@ -472,6 +472,6 @@ void CMainWnd::UpdateTitle() {
     if (spec_ == nullptr)
         wsprintf(title, L"Zetta! v%s", ver);
     else
-        wsprintf(title, L"%s", spec_->name.c_str());
+        wsprintf(title, L"%s - Zetta! v%s", spec_->name.c_str(), ver);
     SetWindowText(title);
 }

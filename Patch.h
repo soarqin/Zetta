@@ -36,6 +36,8 @@ struct PatchBytes {
     std::vector<uint8_t> searchMask;
     std::vector<uint8_t> patch;
     std::vector<uint8_t> patchMask;
+	std::vector<uint8_t> post;
+	std::vector<uint8_t> postMask;
 };
 
 struct PatchAddr {

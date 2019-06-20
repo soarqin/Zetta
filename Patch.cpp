@@ -109,7 +109,8 @@ void Patch::Load(const char* filename) {
                             PatchBytes pb = { (size_t)(*m4)["skip"].GetInt(), sz };
                             ParseBytes((*m4)["patch"].GetString(), pb.patch, pb.patchMask);
                             ParseBytes((*m4)["search"].GetString(), pb.search, pb.searchMask);
-                            paddr.bytes.push_back(pb);
+							if (m4->HasMember("post")) ParseBytes((*m4)["post"].GetString(), pb.post, pb.postMask);
+							paddr.bytes.push_back(pb);
                             sz = (sz + pb.patch.size() + SKIP_LEN + 0x0FUL) & ~0x0FUL;
                         }
                     }

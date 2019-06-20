@@ -67,7 +67,7 @@ private:
     BEGIN_MSG_MAP_EX(CMainWnd)
         MSG_WM_CREATE(OnCreate)
         MSG_WM_DESTROY(OnDestroy)
-        MSG_WM_ERASEBKGND(OnEraseBkGnd)
+        // MSG_WM_ERASEBKGND(OnEraseBkGnd)
         MSG_WM_CLOSE(OnCloseDialog)
         MSG_WM_TIMER(OnTimer)
         NOTIFY_HANDLER(IDC_TABS, TCN_SELCHANGE, OnTabChange);
