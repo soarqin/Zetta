@@ -1,8 +1,15 @@
 # Zetta!
-DISGAEA 1+2 PC Memory Editor
+PC Game Memory Editor
 
 Changes
 =======
+v2.2.0.0
+--------
+1. Added char editor to DISGAEA2
+2. Added support for Bloodstain: RotN
+3. Added support for x64 patches
+4. Added support for post bytes' patch
+
 v2.1.0.0
 --------
 1. Fixed Ctrl+F2 for DISGAEA2
