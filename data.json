@@ -4,7 +4,7 @@
             "Name": "血污：夜之仪式",
             "MemAddr": "0x00000000",
             "Offset": {
-                "功能": [
+                "数据": [
                     {"name": "HP不减", "type": "hard", "block": "prog", "offset": [{"search": "84 C0 74 2F E8", "skip": 4, "patch": "89 7B 38 90 90 90 90 90 90 90 90 B0 00"}]},
                     {"name": "MP不减", "type": "hard", "block": "prog", "offset": [{"search": "2B C8 B8 00 00 00 00 0F 49 C1", "skip": 0, "patch": "90 90"}]},
                     {"name": "金钱改变后最大", "type": "hard", "block": "prog", "offset": [{"search": "42 8D 0C 02 89 8B 54 02 00 00", "skip": 0, "patch": "B9 7F 96 98 00 89 8B 54 02 00 00 90 EB 0C"}]},
@@ -18,8 +18,12 @@
                         {"search": "8B 7A 48 3B F8 7D EC", "skip": 7, "patch": "8B F8"},
                         {"search": "C7 43 48 01 00 00 00 C6 43 59", "skip": 0, "patch": "8B 43 4C 89 43 48 90"}
                     ]},
+                    {"name": "锁定LCK为999", "type": "hard", "block": "prog", "offset": [{"search": "F3 0F 58 96 E4 00 00 00 E9", "skip": 0, "patch": "F3 0F 10 15 B2 61 3F 03"}]}
+                ],
+                "+特殊": [
                     {"name": "击杀一次就完成任务", "type": "hard", "block": "prog", "offset": [{"search": "3B CA 0F 4E D1 42 89 54 0E 10", "skip": 0, "patch": "90 90 90 90 90"}]},
-                    {"name": "超级幸运", "type": "hard", "block": "prog", "offset": [{"search": "F3 0F 58 96 E4 00 00 00 E9", "skip": 0, "patch": "F3 0F 10 15 B2 61 3F 03"}]}
+                    {"name": "无限跳", "type": "hard", "block": "prog", "offset": [{"search": "85 C0 7E 08 FF C8 89 81 E4 13 00 00", "skip": 4, "patch": "90 90"}]},
+                    {"name": "无碰撞无敌", "type": "blk", "block": "prog", "group": 1, "offset": [{"search": "4C 6B F0 70 4C 03 31 4D 8D 7E 08 4C 89 7D E0", "skip": 14, "patch": "4C 6B F0 70 4C 03 31 4D 8D 7E 08 4C 89 7D E0 48 8B 06 48 8B 88 98 02 00 00 0F B6 90 3D 13 00 00", "post": "85 D2 0F 85 0F 18 00 00 90 90 90"}]}
                 ]
             }
         }
